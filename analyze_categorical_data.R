@@ -28,15 +28,11 @@ Freqs_3way = 0        # Frequency analysis of triplets of variables
 CA = 0                # Correspondence Analysis
 MCA = 0               # Multiple Correspondence Analysis
 
-# Select variable of interest for two/three-way analyses; set = 0 to ignore
-var_interest = 0
-
-# Select stratifiers for three-way analysis; set = 0 to ignore
-stratifiers = 0
-
-# Select supplementary variables for CA; set = 0 to ignore
-quali_sup = 0
-quanti_sup = 0
+# Define variables; set equal to 0 to ignore
+var_interest = 0      # Variables of interest for two/three-way analyses
+stratifiers = 0       # Stratifiers for three-way analysis
+quali_sup = 0         # Qualitative supplementary variables for CA
+quanti_sup = 0        # Quantitative supplementary variables for CA
 
 ##########################################################################
 # CHECK FOR PROBLEMS WITH USER INPUT
