@@ -1,6 +1,7 @@
 # Custom R Functions
-# James Harper, PE
-# University of Colorado Boulder
+# Written by James Harper, PE, ENV SP of the University of Colorado Boulder
+# Started October 1, 2017
+# Last updated February 13, 2018
 
 categorical_analysis_1way = function(data, metric1) {
   
