@@ -10,7 +10,6 @@
 ##########################################################################
 rm(list = ls())                                                             # Clear global environment
 cat("\014")                                                                 # Clear console window
-setwd("C:/Users/James Harper/Downloads/R/iDE")                              # Set working directory
 file.remove(dir(paste(getwd(),"/Output/", sep = ""), full.names = TRUE))    # Clear output folder of all files
 source("functions.R")                                                       # Load custom functions
 load_libraries(c("rio", "gmodels", "vcd", "gtools", "ca", "extracat",       # Install and/or load libraries
