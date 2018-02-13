@@ -2,6 +2,9 @@
 .Rhistory
 .RData
 .Ruserdata
-**/Archive
-**/Results
-analyze_latrine_owner_surveys.Rproj
+**/archive
+**/results
+**/data
+**/output
+analyze_categorical_data.Rproj
+mca.R
