@@ -65,7 +65,7 @@ for (i in 1:length(names(data))) {
 ##########################################################################
 # ANALYZE DATA
 ##########################################################################
-# Run 1-way categorical analyses
+# Run 1-way frequency analyses
 if (Freqs_1way == 1) {
   print("Running one-way frequency analyses...")
   for (num in 1:length(data)) {
@@ -74,11 +74,14 @@ if (Freqs_1way == 1) {
   }
 }
 
+# Run 2-way frequency analyses
 if (Freqs_2way == 1) {
   print("Running two-way frequency analyses...")
   
   # Create permutations of metrics to test for association
   metrics_2way = permutations(n = length(data), r = 2, v = 1:length(data), repeats.allowed = FALSE)
+  
+  # If a variable of interest has been input, analyze data only related to that variable.
   if (var_interest[[1]] != 0) {
     temp = list()
     for (i in 1:length(var_interest)) {
@@ -91,52 +94,49 @@ if (Freqs_2way == 1) {
     metrics_2way = temp
   }
 
-  # Run 2-way categorical analyses
+  # if (stratifiers[[1]] != 0) {
+  #   # Loop through selected stratifiers
+  #   for (stratifier in stratifiers) {
+  #     print(paste("Running one-way tests stratified by ", names(data[stratifier]), sep = ""))
+  #     
+  #     # Create combinations of metrics to test for association
+  #     strat_array = rep(stratifier, times = length(data))
+  #     data_array = 1:length(data)
+  #     combos = cbind(strat_array, data_array)
+  #     combos = combos[-stratifier,]
+  #     # if (var_interest != 0) {                                             # If a variable of interest has been selected,
+  #     #   combos = combos[metrics_2way[,2] == var_interest,]     # Select only permutations with variable of interest first
+  #     # }
+  #     # print(combos)
+  #     
+  #     # Run 1-way categorical analyses stratified by this stratifier
+  #     # (same as unstratified two-way categorical analyses between stratifier and all other variables)
+  #     for (num in 1:length(combos[,1])) {
+  #       print(paste(combos[num,1],"_",combos[num,2]))
+  #       categorical_analysis_2way(data, combos[num,1], combos[num,2])
+  #     }
+  #   }
+  # }
+  
   for (num in 1:length(metrics_2way[,1])) {
     print(paste(metrics_2way[num,1],"_",metrics_2way[num,2]))
     categorical_analysis_2way(data, metrics_2way[num,1], metrics_2way[num,2])
   }
 }
 
-##########################################################################
-# ANALYZE DATA - TEST FOR ASSOCIATIONS WITH STRATIFICATION
-##########################################################################
-if (Run_Tests_for_Associations_with_Stratification == 1) {
-  print("Running tests for association with stratification...")
+# Run 3-way frequency analyses
+if (Freqs_3way == 1) {
+  print("Running three-way frequency analyses...")
   
-  # Run stratified association analyses
-  if (Run_OneWay_Tests == 1) {
-    
+  # Create permutations of metrics to test for association
+  metrics_3way = permutations(n = length(data), r = 3, v = 1:length(data), repeats.allowed = FALSE)
+  
+  if (stratifiers[[1]] != 0) {
     # Loop through selected stratifiers
     for (stratifier in stratifiers) {
-      print(paste("Running one-way tests stratified by ", names(data[stratifier]), sep = ""))
       
-      # Create combinations of metrics to test for association
-      strat_array = rep(stratifier, times = length(data))
-      data_array = 1:length(data)
-      combos = cbind(strat_array, data_array)
-      combos = combos[-stratifier,]
-      # if (var_interest != 0) {                                             # If a variable of interest has been selected,
-      #   combos = combos[metrics_2way[,2] == var_interest,]     # Select only permutations with variable of interest first
-      # }
-      # print(combos)
-      
-      # Run 1-way categorical analyses stratified by this stratifier
-      # (same as unstratified two-way categorical analyses between stratifier and all other variables)
-      for (num in 1:length(combos[,1])) {
-        print(paste(combos[num,1],"_",combos[num,2]))
-        categorical_analysis_2way(data, combos[num,1], combos[num,2])
-      }
-    }
-  }
-
-  if (Run_TwoWay_Tests == 1) {
-    
-    # Loop through selected stratifiers
-    for (stratifier in stratifiers) {
-    
       print(paste("Running two-way tests stratified by ", names(data[stratifier]), sep = ""))
-  
+      
       # Create combinations of metrics to test for association
       metrics_2way = permutations(n = length(data) - 8, r = 2, v = 9:length(data), repeats.allowed = FALSE)
       if (var_interest[[1]] != 0) {
@@ -154,21 +154,24 @@ if (Run_Tests_for_Associations_with_Stratification == 1) {
       # metrics_2way = data.frame(metrics_2way)
       # metrics_2way = subset(metrics_2way, X1 != stratifier)
       # metrics_2way = subset(metrics_2way, X2 != stratifier)
-  
+      
       # Run 2-way categorical analyses stratified by this stratifier
       for (num in 1:length(metrics_2way[,1])) {
-      # for (num in 1:1) {
+        # for (num in 1:1) {
         print(paste(metrics_2way[num,1], "_", metrics_2way[num,2], "_", stratifier))
         categorical_analysis_3way(data, metrics_2way[num,1], metrics_2way[num,2], stratifier)
       }
     }
   }
-    
 }
 
-##########################################################################
-# ANALYZE DATA - CORRESPONDENCE ANALYSIS
-##########################################################################
+
+
+
+
+
+
+
 if (Run_Correspondence_Analyses == 1) {
   print("Running correspondence analyses...")
 
