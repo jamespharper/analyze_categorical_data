@@ -171,7 +171,7 @@ if (Freqs_3way == 1) {
 
 
 
-if (Run_Correspondence_Analyses == 1) {
+if (CA == 1) {
   print("Running correspondence analyses...")
 
   # Create combinations of metrics to test for correspondences
@@ -189,7 +189,10 @@ if (Run_Correspondence_Analyses == 1) {
   }
 }
 
-if (Run_Multiple_Correspondence_Analysis == 1) {
+
+
+
+if (MCA == 1) {
   print("Running multiple correspondence analysis...")
   
   # Run multiple correspondence analysis
