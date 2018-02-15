@@ -19,7 +19,7 @@ categorical_analysis_1way = function(data, metric1) {
   name = paste("freqs_1way_", names(data)[[metric1]], sep = "")
   
   # Start sending text output to text file
-  file1 = file(paste(getwd(),"/Output/", name, ".txt", sep = ""))
+  file1 = file(paste(getwd(),"/output/", name, ".txt", sep = ""))
   sink(file1, append = TRUE)
   sink(file1, append = TRUE, type = "message")
 
