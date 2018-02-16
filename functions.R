@@ -168,8 +168,8 @@ categorical_analysis_3way = function(data, metric1, metric2, metric3) {
   # Create file name and plot name variables that includes first 2 p-values
   p_value1 = round(chisq_cramv[[1]]$chisq_tests[2,3], digits = 3)
   p_value2 = round(chisq_cramv[[2]]$chisq_tests[2,3], digits = 3)
-  name = paste("freqs_3way_", p_value1, "_", p_value2, "_", names(data)[[metric1]], "_", names(data)[[metric2]], 
-               names(data)[[metric3]], "_", sep = "")
+  name = paste("freqs_3way_", p_value1, "_", p_value2, "_", names(data)[[metric1]], "_", names(data)[[metric2]], "_", 
+               names(data)[[metric3]], sep = "")
   plot_name = paste(names(data)[[metric1]], "_", names(data)[[metric2]], "_", names(data)[[metric3]], sep = "")
   
   # Start sending text output to text file in a given folder based on p_values
