@@ -168,8 +168,8 @@ categorical_analysis_3way = function(data, metric1, metric2, metric3) {
   # Create file name and plot name variables that includes first 2 p-values
   p_value1 = round(chisq_cramv[[1]]$chisq_tests[2,3], digits = 3)
   p_value2 = round(chisq_cramv[[2]]$chisq_tests[2,3], digits = 3)
-  name = paste("freqs_3way_", p_value1, "_", p_value2, "_", names(data)[[metric3]], "_", names(data)[[metric1]], 
-               "_", names(data)[[metric2]], sep = "")
+  name = paste("freqs_3way_", p_value1, "_", p_value2, "_", names(data)[[metric1]], "_", names(data)[[metric2]], 
+               names(data)[[metric3]], "_", sep = "")
   plot_name = paste(names(data)[[metric1]], "_", names(data)[[metric2]], "_", names(data)[[metric3]], sep = "")
   
   # Start sending text output to text file in a given folder based on p_values
@@ -222,27 +222,30 @@ categorical_analysis_3way = function(data, metric1, metric2, metric3) {
   
   # Start saving plot to PDF in a given folder based on p_values
   if (is.nan(p_value1) || is.nan(p_value2)) {
-    folder = create_folder(subfolder = "p is NaN")       # Create output folder
-    pdf(paste(folder, "/", name, ".pdf", sep = ""))      # Start saving plot to PDF in folder
+    folder = create_folder(subfolder = "p is NaN")
+    pdf(paste(folder, "/", name, ".pdf", sep = ""))
   } else if (p_value1 > 0.05 || p_value2 > 0.05) {
-    folder = create_folder(subfolder = "p above 0.05")   # Create output folder
-    pdf(paste(folder, "/", name, ".pdf", sep = ""))      # Start saving plot to PDF in folder
+    folder = create_folder(subfolder = "p above 0.05")
+    pdf(paste(folder, "/", name, ".pdf", sep = ""))
   } else {
-    folder = create_folder(subfolder = "")               # Create output folder
-    pdf(paste(folder, "/", name, ".pdf", sep = ""))      # Start saving plot to PDF in folder
+    folder = create_folder(subfolder = "")
+    pdf(paste(folder, "/", name, ".pdf", sep = ""))
   }
   
   # Create dataframe from data
   data_frame = data.frame(A, B, C)
-  names(data_frame) = c(names(data)[[metric1]], names(data)[[metric2]], names(data)[[metric3]])
+  names(data_frame) = c(names(data)[[metric1]], names(data)[[metric2]], 
+                        names(data)[[metric3]])
   
   # Generate categorical analysis plots
   scpcp(data_frame, sel = "data[,3]")
-  mosaic(freqs, shade = TRUE, legend = TRUE, main = plot_name)          # Mosaic plot
-  rmb(freqs)                                                            # RMB plot
-  rmbmat(freqs, tv = 1)                                                 # RMB plot matrix
-  fluctile(freqs)                                                       # Fluctuation diagram
-  barplot(table(B,A), main = name, legend = colnames(freqs))            # Stacked bar plot with legend
+  mosaic(freqs, shade = TRUE,                     # Mosaic plot
+         legend = TRUE, main = plot_name)
+  rmb(freqs)                                      # RMB plot
+  rmbmat(freqs, tv = 1)                           # RMB matrix plot
+  fluctile(freqs)                                 # Fluctuation plot
+  barplot(table(B,A), main = name,                # Stacked bar plot with legend
+          legend = colnames(freqs))    
   
   # Stop saving plot to PDF
   dev.off()
