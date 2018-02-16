@@ -10,12 +10,13 @@
 ###############################################################################
 rm(list = ls())                                      # Clear global environment
 cat("\014")                                          # Clear console window
-file.remove(dir(paste(getwd(),"/Output/", sep = ""), # Clear output folder
+file.remove(dir(paste(getwd(),"/output/", sep = ""), # Clear output folder
                 full.names = TRUE))    
 source("functions.R")                                # Load custom functions
 load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
                  "ca", "extracat", "iplots", 
-                 "FactoMineR"))
+                 "FactoMineR", "gplots", "factoextra",
+                 "corrplot", "ggpubr"))
 
 ###############################################################################
 # USER INPUT
@@ -33,7 +34,7 @@ MCA = 0       # Multiple Correspondence Analysis
 # Define variables; set equal to 0 to ignore
 var_skip = c(1, 4,        # Variables to skip during analyses
              7:10, 15:24) 
-var_interest = 13         # Variables of interest for two/three-way/CA analyses
+var_interest = 5         # Variables of interest for two/three-way/CA analyses
 var_stratify = 44         # Stratifiers for two/three-way analysis
 quali_sup = 0             # Qualitative supplementary variables for CA
 quanti_sup = 0            # Quantitative supplementary variables for CA
@@ -194,8 +195,7 @@ if (CA == 1) {
   # Run correspondence analyses
   for (num in 1:length(metrics_2way[,1])) {
     print(paste(metrics_2way[num,1], "_", metrics_2way[num,2]))
-    correspondence_analysis_2way(data, metrics_2way[num,1], 
-                                 metrics_2way[num,2])
+    correspondence_analysis(data, metrics_2way[num,1], metrics_2way[num,2])
   }
 }
 

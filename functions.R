@@ -9,8 +9,8 @@ categorical_analysis_1way = function(data, metric1) {
   A = data[metric1][[1]]
   
   # Perform categorical analyses and store results for printing below
-  freqs = table(A)                                                       # Create frequency table
-  freqs_prop = prop.table(freqs)                                         # Create proportions table
+  freqs = table(A)
+  freqs_prop = prop.table(freqs)
   freqs_prop_df = data.frame(Response = names(freqs_prop), 
                              Proportion = as.numeric(freqs_prop))
   freqs_prop_df = freqs_prop_df[order(-freqs_prop_df$Proportion),]
@@ -51,7 +51,7 @@ categorical_analysis_2way = function(data, metric1, metric2) {
   sink(file1, append = TRUE, type = "message")
   
   # Perform categorical analyses
-  freqs = table(A, B)                            # Create frequency table for stats
+  freqs = table(A, B)
   # print(freqs)
   # freqs = freqs[order(-freqs[,1]),]              # Sort table by frequency in first column
   # print(freqs)
@@ -131,8 +131,10 @@ categorical_analysis_2way = function(data, metric1, metric2) {
   # Generate categorical analysis plots
   if (length(freqs[,1]) < 50) {
     mosaic(freqs, shade = TRUE, legend = TRUE, main = plot_name)          # Mosaic plot
+    balloonplot(freqs, main = name)
   } else {
     mosaic(freqs, shade = TRUE, legend = TRUE, main = plot_name)          # Mosaic plot
+    balloonplot(freqs, main = name)
     # barplot(table(B,A), main=name, legend = colnames(freqs))       # Stacked bar plot with legend
   }
   
@@ -155,7 +157,7 @@ categorical_analysis_3way = function(data, metric1, metric2, metric3) {
   sink(file1, append = TRUE, type = "message")
   
   # Perform categorical analyses
-  freqs = table(A, B, C)                            # Create frequency table for stats
+  freqs = table(A, B, C)
   freqs_prop = prop.table(freqs, 3)
   # freqs = freqs[order(-freqs[,1]),]              # Sort table by frequency in first column
   # print(fisher.test(freqs))                      # Fisher Exact test
@@ -245,7 +247,8 @@ categorical_analysis_3way = function(data, metric1, metric2, metric3) {
   rmbmat(freqs, tv = 1)                           # RMB matrix plot
   fluctile(freqs)                                 # Fluctuation plot
   barplot(table(B,A), main = name,                # Stacked bar plot with legend
-          legend = colnames(freqs))    
+          legend = colnames(freqs))
+  balloonplot(freqs, main = name)
   
   # Stop saving plot to PDF
   dev.off()
@@ -253,17 +256,22 @@ categorical_analysis_3way = function(data, metric1, metric2, metric3) {
   
 }
 
-correspondence_analysis_2way = function(data, metric1, metric2) {
+correspondence_analysis = function(data, metric1, metric2) {
 
   # Create temporary vectors and name variable from data
   A = data[metric1][[1]]
   B = data[metric2][[1]]
-  name = paste(names(data)[[metric1]], "___", names(data)[[metric2]], sep = "")
   
-  # Start sending text output to text file
-  # file1 = file(paste(getwd(),"/Output/", name, ".txt", sep = ""))
-  # sink(file1, append=TRUE)
-  # sink(file1, append=TRUE, type="message")
+  # Create file name and plot name variables
+  name = paste("ca_", names(data)[[metric1]], "_", names(data)[[metric2]], 
+               sep = "")
+  plot_name = paste(names(data)[[metric1]], "_", names(data)[[metric2]],
+                    sep = "")
+  
+  # Start sending text output to text file in folder
+  file1 = file(paste(getwd(), "/output/", name, ".txt", sep = ""))
+  sink(file1, append = TRUE)
+  sink(file1, append = TRUE, type = "message")
   
   # Add title to text file
   print(paste("A = ", names(data)[[metric1]], sep = ""))
@@ -271,7 +279,7 @@ correspondence_analysis_2way = function(data, metric1, metric2) {
   
   # Perform correspondence analyses
   CrossTable(A, B)
-  freqs = table(A, B)                            # Create frequency table for stats
+  freqs = table(A, B)
   print(freqs)
   print(prop.table(freqs, 1))
   print(prop.table(freqs, 2))
@@ -279,23 +287,49 @@ correspondence_analysis_2way = function(data, metric1, metric2) {
   print(freqs.ca)
   print(summary(freqs.ca))
   
-  # Stop sending text output to file
-  # sink()
-  # sink(type="message")
+  # Stop saving text output to file
+  sink()
+  sink(type = "message")
   
-  # Start sending plot output to file
-  # pdf(paste(getwd(),"/Output/", name, ".pdf", sep = ""))
+  # Generate plots and store in list
+  plot1 = fviz_ca_biplot(freqs.ca, map = "symbiplot", 
+                                    arrow = c(TRUE, TRUE), repel = TRUE)
+  plot2 = fviz_screeplot(freqs.ca, addlabels = TRUE, 
+                                    ylim = c(0, 50))
+  row = get_ca_row(freqs.ca)
+  fviz_ca_row(freqs.ca, col.row = "cos2",
+              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), repel = TRUE)
+  corrplot(row$cos2, is.corr = FALSE)
+  fviz_cos2(freqs.ca, choice = "row", axes = 1:2)
+  corrplot(row$contrib, is.corr = FALSE)    
+  fviz_contrib(freqs.ca, choice = "row", axes = 1, top = 10)
+  fviz_contrib(freqs.ca, choice = "row", axes = 2, top = 10)
+  fviz_contrib(freqs.ca, choice = "row", axes = 1:2, top = 10)
+  fviz_ca_row(freqs.ca, col.row = "contrib",
+              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+              repel = TRUE)
   
-  # Generate correspondence analysis plots
-  print("plotting")
-  plot(freqs.ca) # symmetric map
-  plot(freqs.ca, mass = TRUE, contrib = "absolute", 
+  col = get_ca_col(freqs.ca)
+  fviz_ca_col(freqs.ca, col.col = "cos2", 
+              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+              repel = TRUE)
+  corrplot(col$cos2, is.corr = FALSE)
+  fviz_cos2(freqs.ca, choice = "col", axes = 1:2)
+  corrplot(col$contrib, is.corr = FALSE)
+  fviz_contrib(freqs.ca, choice = "col", axes = 1, top = 10)
+  fviz_contrib(freqs.ca, choice = "col", axes = 2, top = 10)
+  fviz_contrib(freqs.ca, choice = "col", axes = 1:2, top = 10)
+  fviz_ca_col(freqs.ca, col.row = "contrib",
+              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+              repel = TRUE)
+  
+  plot(freqs.ca, main = plot_name) # symmetric map
+  plot(freqs.ca, main = plot_name, mass = TRUE, contrib = "absolute", 
        map = "rowgreen", arrows = c(FALSE, TRUE)) # asymmetric map
   
-  # Stop sending plot output to file
-  # dev.off()
-  # 
-  # closeAllConnections()
+  # Save plots to PDF
+  ggexport(plotlist = list(plot1, plot2), 
+           filename = paste(getwd(), "/output/", name, ".pdf", sep = ""))
 }
 
 multiple_correspondence_analysis = function(data, quali_sup, quanti_sup) {
@@ -340,7 +374,7 @@ save_text_output_to_file = function(subfolder, name) {
 create_folder = function(subfolder) {
   
   # Name folder to store output
-  folder = paste(getwd(),"/Output/", subfolder, sep = "")
+  folder = paste(getwd(),"/output/", subfolder, sep = "")
   
   # Create folder if it does not exist
   if (!dir.exists(folder)) {
