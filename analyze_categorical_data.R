@@ -22,15 +22,15 @@ load_libraries(c("rio", "gmodels", "vcd", "gtools", "ca", "extracat",       # In
 file_to_import = paste(getwd(), "/data/data_latowner_6monthpostconstruction.xlsx", sep = "")
 
 # Select tests to run
-Freqs_1way = 1        # Frequency analysis of individual variables
-Freqs_2way = 0        # Frequency analysis of pairs of variables
+Freqs_1way = 0        # Frequency analysis of individual variables
+Freqs_2way = 1        # Frequency analysis of pairs of variables
 Freqs_3way = 0        # Frequency analysis of triplets of variables
 CA = 0                # Correspondence Analysis
 MCA = 0               # Multiple Correspondence Analysis
 
 # Define variables; set equal to 0 to ignore
 var_skip = c(1,4,7:10,15:24) # Variables to skip during analyses
-var_interest = 3             # Variables of interest for two/three-way analyses
+var_interest = 0             # Variables of interest for two/three-way analyses
 var_stratify = 0             # Stratifiers for three-way analysis
 quali_sup = 0                # Qualitative supplementary variables for CA
 quanti_sup = 0               # Quantitative supplementary variables for CA
@@ -66,7 +66,6 @@ if (Freqs_1way == 1) {
   print("Running one-way frequency analyses...")
   for (num in 1:length(data)) {
     if (num %in% var_skip) {
-      print(paste("num =", num))
       next
     }
     print(num)
@@ -97,7 +96,25 @@ if (Freqs_2way == 1) {
       metrics_2way = metrics_2way[ which(metrics_2way$A == var_interest[[i]]), ]
     }
   }
+  
+  for (num in 1:length(metrics_2way[,1])) {
+    print(paste(metrics_2way[num,1],"_",metrics_2way[num,2]))
+    categorical_analysis_2way(data, metrics_2way[num,1], metrics_2way[num,2])
+  }
+}
 
+# Run 3-way frequency analyses
+if (Freqs_3way == 1) {
+  print("Running three-way frequency analyses...")
+  
+  # Create permutations of metrics to test for association
+  metrics_3way = permutations(n = length(data), r = 3, v = 1:length(data), repeats.allowed = FALSE)
+  
+  
+  
+  
+  
+  
   # if (stratifiers[[1]] != 0) {
   #   # Loop through selected stratifiers
   #   for (stratifier in stratifiers) {
@@ -121,19 +138,6 @@ if (Freqs_2way == 1) {
   #     }
   #   }
   # }
-  
-  for (num in 1:length(metrics_2way[,1])) {
-    print(paste(metrics_2way[num,1],"_",metrics_2way[num,2]))
-    categorical_analysis_2way(data, metrics_2way[num,1], metrics_2way[num,2])
-  }
-}
-
-# Run 3-way frequency analyses
-if (Freqs_3way == 1) {
-  print("Running three-way frequency analyses...")
-  
-  # Create permutations of metrics to test for association
-  metrics_3way = permutations(n = length(data), r = 3, v = 1:length(data), repeats.allowed = FALSE)
   
   if (stratifiers[[1]] != 0) {
     # Loop through selected stratifiers
