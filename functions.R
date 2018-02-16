@@ -270,14 +270,14 @@ correspondence_analysis_2way = function(data, metric1, metric2) {
   print(paste("B = ", names(data)[[metric2]], sep = ""))
   
   # Perform correspondence analyses
-  CrossTable(A, B)                  # 2-way contingency table
-  freqs = table(A, B)              # Generate frequency table for stats
+  CrossTable(A, B)
+  freqs = table(A, B)                            # Create frequency table for stats
   print(freqs)
-  prop.table(freqs, 1) # row percentages
-  prop.table(freqs, 2) # column percentages
-  fit = ca(freqs)
-  print(fit) # basic results 
-  summary(fit) # extended results
+  print(prop.table(freqs, 1))
+  print(prop.table(freqs, 2))
+  freqs.ca = ca(freqs)
+  print(freqs.ca)
+  print(summary(freqs.ca))
   
   # Stop sending text output to file
   # sink()
@@ -287,9 +287,10 @@ correspondence_analysis_2way = function(data, metric1, metric2) {
   # pdf(paste(getwd(),"/Output/", name, ".pdf", sep = ""))
   
   # Generate correspondence analysis plots
-  plot(fit) # symmetric map
-  plot(fit, mass = TRUE, contrib = "absolute", map =
-         "rowgreen", arrows = c(FALSE, TRUE)) # asymmetric map
+  print("plotting")
+  plot(freqs.ca) # symmetric map
+  plot(freqs.ca, mass = TRUE, contrib = "absolute", 
+       map = "rowgreen", arrows = c(FALSE, TRUE)) # asymmetric map
   
   # Stop sending plot output to file
   # dev.off()
