@@ -26,14 +26,14 @@ file_to_import = paste(getwd(),
                        sep = "")
 
 # Select tests to run; set equal to 0 to ignore
-Freqs = 2     # Frequency analysis as singles, pairs, or triplets (1, 2, or 3)
+Freqs = 3     # Frequency analysis as singles, pairs, or triplets (1, 2, or 3)
 CA = 0        # Correspondence Analysis
 MCA = 0       # Multiple Correspondence Analysis
 
 # Define variables; set equal to 0 to ignore
 var_skip = c(1,4,7:10,15:24) # Variables to skip during analyses
-var_interest = 11             # Variables of interest for two/three-way analyses
-var_stratify = 0             # Stratifiers for three-way analysis
+var_interest = 0             # Variables of interest for two/three-way analyses
+var_stratify = 11             # Stratifiers for three-way analysis
 quali_sup = 0                # Qualitative supplementary variables for CA
 quanti_sup = 0               # Quantitative supplementary variables for CA
 
@@ -67,9 +67,13 @@ for (i in 1:length(names(data))) {
 if (Freqs == 1) {
   print("Running one-way frequency analyses...")
   for (num in 1:length(data)) {
+    
+    # Skip to next variable if current variable is a skipped variable
     if (num %in% var_skip) {
       next
     }
+    
+    # Run analyses
     print(num)
     categorical_analysis_1way(data, num)
   }
@@ -106,6 +110,7 @@ if (Freqs == 2) {
     }
   }
   
+  # Run analyses
   for (num in 1:length(metrics_2way[,1])) {
     print(paste(metrics_2way[num,1],"_",metrics_2way[num,2]))
     categorical_analysis_2way(data, metrics_2way[num,1], metrics_2way[num,2])
@@ -135,6 +140,13 @@ if (Freqs == 3) {
   if (var_interest[[1]] != 0) {
     for (i in 1:length(var_interest)) {
       metrics_3way = metrics_3way[ which(metrics_3way$A == var_interest[[i]]), ]
+    }
+  }
+  
+  # Retain only pairs that end with stratifiers
+  if (var_stratify[[1]] != 0) {
+    for (i in 1:length(var_stratify)) {
+      metrics_3way = metrics_3way[ which(metrics_3way$C == var_stratify[[i]]), ]
     }
   }
   
