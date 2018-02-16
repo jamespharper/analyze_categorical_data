@@ -26,16 +26,17 @@ file_to_import = paste(getwd(),
                        sep = "")
 
 # Select tests to run; set equal to 0 to ignore
-Freqs = 3     # Frequency analysis as singles, pairs, or triplets (1, 2, or 3)
-CA = 0        # Correspondence Analysis
+Freqs = 0     # Frequency analysis as singles, pairs, or triplets (1, 2, or 3)
+CA = 1        # Correspondence Analysis
 MCA = 0       # Multiple Correspondence Analysis
 
 # Define variables; set equal to 0 to ignore
-var_skip = c(1,4,7:10,15:24) # Variables to skip during analyses
-var_interest = 0             # Variables of interest for two/three-way analyses
-var_stratify = 11             # Stratifiers for three-way analysis
-quali_sup = 0                # Qualitative supplementary variables for CA
-quanti_sup = 0               # Quantitative supplementary variables for CA
+var_skip = c(1, 4,        # Variables to skip during analyses
+             7:10, 15:24) 
+var_interest = 13         # Variables of interest for two/three-way/CA analyses
+var_stratify = 44         # Stratifiers for two/three-way analysis
+quali_sup = 0             # Qualitative supplementary variables for CA
+quanti_sup = 0            # Quantitative supplementary variables for CA
 
 ###############################################################################
 # CHECK FOR PROBLEMS WITH USER INPUT
@@ -91,22 +92,22 @@ if (Freqs == 2) {
   # Remove pairs that contain skipped variables
   if (var_skip[[1]] != 0) {
     for (i in 1:length(var_skip)) {
-      metrics_2way = metrics_2way[ which(metrics_2way$A != var_skip[[i]] &
-                                         metrics_2way$B != var_skip[[i]]), ]
+      metrics_2way = metrics_2way[which(metrics_2way$A != var_skip[[i]] &
+                                        metrics_2way$B != var_skip[[i]]), ]
     }
   }
   
   # Retain only pairs that begin with variables of interest
   if (var_interest[[1]] != 0) {
     for (i in 1:length(var_interest)) {
-      metrics_2way = metrics_2way[ which(metrics_2way$A == var_interest[[i]]), ]
+      metrics_2way = metrics_2way[which(metrics_2way$A == var_interest[[i]]), ]
     }
   }
   
   # Retain only pairs that end with stratifiers
   if (var_stratify[[1]] != 0) {
     for (i in 1:length(var_stratify)) {
-      metrics_2way = metrics_2way[ which(metrics_2way$B == var_stratify[[i]]), ]
+      metrics_2way = metrics_2way[which(metrics_2way$B == var_stratify[[i]]), ]
     }
   }
   
@@ -130,113 +131,71 @@ if (Freqs == 3) {
   # Remove triplets that contain skipped variables
   if (var_skip[[1]] != 0) {
     for (i in 1:length(var_skip)) {
-      metrics_3way = metrics_3way[ which(metrics_3way$A != var_skip[[i]] &
-                                         metrics_3way$B != var_skip[[i]] &
-                                         metrics_3way$C != var_skip[[i]]), ]
+      metrics_3way = metrics_3way[which(metrics_3way$A != var_skip[[i]] &
+                                        metrics_3way$B != var_skip[[i]] &
+                                        metrics_3way$C != var_skip[[i]]), ]
     }
   }
   
   # Retain only triplets that begin with variables of interest
   if (var_interest[[1]] != 0) {
     for (i in 1:length(var_interest)) {
-      metrics_3way = metrics_3way[ which(metrics_3way$A == var_interest[[i]]), ]
+      metrics_3way = metrics_3way[which(metrics_3way$A == var_interest[[i]]), ]
     }
   }
   
   # Retain only pairs that end with stratifiers
   if (var_stratify[[1]] != 0) {
     for (i in 1:length(var_stratify)) {
-      metrics_3way = metrics_3way[ which(metrics_3way$C == var_stratify[[i]]), ]
+      metrics_3way = metrics_3way[which(metrics_3way$C == var_stratify[[i]]), ]
     }
   }
   
-  # if (stratifiers[[1]] != 0) {
-  #   # Loop through selected stratifiers
-  #   for (stratifier in stratifiers) {
-  #     print(paste("Running one-way tests stratified by ", names(data[stratifier]), sep = ""))
-  #     
-  #     # Create combinations of metrics to test for association
-  #     strat_array = rep(stratifier, times = length(data))
-  #     data_array = 1:length(data)
-  #     combos = cbind(strat_array, data_array)
-  #     combos = combos[-stratifier,]
-  #     # if (var_interest != 0) {                                             # If a variable of interest has been selected,
-  #     #   combos = combos[metrics_2way[,2] == var_interest,]     # Select only permutations with variable of interest first
-  #     # }
-  #     # print(combos)
-  #     
-  #     # Run 1-way categorical analyses stratified by this stratifier
-  #     # (same as unstratified two-way categorical analyses between stratifier and all other variables)
-  #     for (num in 1:length(combos[,1])) {
-  #       print(paste(combos[num,1],"_",combos[num,2]))
-  #       categorical_analysis_2way(data, combos[num,1], combos[num,2])
-  #     }
-  #   }
-  # }
-  
-  # if (stratifiers[[1]] != 0) {
-  #   # Loop through selected stratifiers
-  #   for (stratifier in stratifiers) {
-  #     
-  #     print(paste("Running two-way tests stratified by ", names(data[stratifier]), sep = ""))
-  #     
-  #     # Create combinations of metrics to test for association
-  #     metrics_2way = permutations(n = length(data) - 8, r = 2, v = 9:length(data), repeats.allowed = FALSE)
-  #     if (var_interest[[1]] != 0) {
-  #       temp = list()
-  #       for (i in 1:length(var_interest)) {
-  #         if (length(temp) == 0) {
-  #           temp = metrics_2way[metrics_2way[,1] == var_interest[[i]],]
-  #         } else {
-  #           temp = rbind(temp, metrics_2way[metrics_2way[,1] == var_interest[[i]],])
-  #         }
-  #       }
-  #       metrics_2way = temp
-  #       # print(metrics_2way)
-  #     }
-  #     # metrics_2way = data.frame(metrics_2way)
-  #     # metrics_2way = subset(metrics_2way, X1 != stratifier)
-  #     # metrics_2way = subset(metrics_2way, X2 != stratifier)
-  #     
-  #     # Run 2-way categorical analyses stratified by this stratifier
-  #     for (num in 1:length(metrics_2way[,1])) {
-  #       # for (num in 1:1) {
-  #       print(paste(metrics_2way[num,1], "_", metrics_2way[num,2], "_", stratifier))
-  #       categorical_analysis_3way(data, metrics_2way[num,1], metrics_2way[num,2], stratifier)
-  #     }
-  #   }
-  # }
-  
+  # Run analyses
   for (num in 1:length(metrics_3way[,1])) {
-    print(paste(metrics_3way[num, 1], "_", metrics_3way[num, 2], "_", metrics_3way[num, 3]))
-    categorical_analysis_3way(data, metrics_3way[num, 1], metrics_3way[num, 2], metrics_3way[num, 3])
+    print(paste(metrics_3way[num, 1], "_", metrics_3way[num, 2], "_", 
+                metrics_3way[num, 3]))
+    categorical_analysis_3way(data, metrics_3way[num, 1], metrics_3way[num, 2], 
+                              metrics_3way[num, 3])
   }
-  
-  
 }
 
-
-
-
-
-
-
-
+# Run correspondence analysis
 if (CA == 1) {
   print("Running correspondence analyses...")
 
-  # Create combinations of metrics to test for correspondences
-  metrics_2way = permutations(n = length(data), r = 2,
-                              v = 1:length(data),
-                              repeats.allowed = FALSE)
-  head(metrics_2way)
-  metrics_2way = metrics_2way[-c(1),]
-  head(metrics_2way)
+  # Create permutations of metrics to test for association
+  metrics_2way = permutations(n = length(data), r = 2, 
+                              v = 1:length(data), repeats.allowed = FALSE)
+  metrics_2way = data.frame(A = metrics_2way[,1], B = metrics_2way[,2])
+  
+  # Remove pairs that contain skipped variables
+  if (var_skip[[1]] != 0) {
+    for (i in 1:length(var_skip)) {
+      metrics_2way = metrics_2way[which(metrics_2way$A != var_skip[[i]] &
+                                        metrics_2way$B != var_skip[[i]]), ]
+    }
+  }
+  
+  # Retain only pairs that begin with variables of interest
+  if (var_interest[[1]] != 0) {
+    for (i in 1:length(var_interest)) {
+      metrics_2way = metrics_2way[which(metrics_2way$A == var_interest[[i]]), ]
+    }
+  }
+  
+  # Retain only pairs that end with stratifiers
+  if (var_stratify[[1]] != 0) {
+    for (i in 1:length(var_stratify)) {
+      metrics_2way = metrics_2way[which(metrics_2way$B == var_stratify[[i]]), ]
+    }
+  }
 
   # Run correspondence analyses
   for (num in 1:length(metrics_2way[,1])) {
-    print(paste(metrics_2way[num,1],"_",metrics_2way[num,2]))
-    correspondence_analysis_2way(data, metrics_2way[num,1], metrics_2way[num,2])
+    print(paste(metrics_2way[num,1], "_", metrics_2way[num,2]))
+    correspondence_analysis_2way(data, metrics_2way[num,1], 
+                                 metrics_2way[num,2])
   }
 }
 
