@@ -29,9 +29,9 @@ CA = 0                # Correspondence Analysis
 MCA = 0               # Multiple Correspondence Analysis
 
 # Define variables; set equal to 0 to ignore
-skip = c(1,4,7:10,15:24)     # Variables to skip during analyses
-var_interest = 0             # Variables of interest for two/three-way analyses
-stratifiers = 0              # Stratifiers for three-way analysis
+var_skip = c(1,4,7:10,15:24) # Variables to skip during analyses
+var_interest = 3             # Variables of interest for two/three-way analyses
+var_stratify = 0             # Stratifiers for three-way analysis
 quali_sup = 0                # Qualitative supplementary variables for CA
 quanti_sup = 0               # Quantitative supplementary variables for CA
 
@@ -65,8 +65,9 @@ for (i in 1:length(names(data))) {
 if (Freqs_1way == 1) {
   print("Running one-way frequency analyses...")
   for (num in 1:length(data)) {
-    if (num != skip_vars) {
-      
+    if (num %in% var_skip) {
+      print(paste("num =", num))
+      next
     }
     print(num)
     categorical_analysis_1way(data, num)
@@ -78,19 +79,23 @@ if (Freqs_2way == 1) {
   print("Running two-way frequency analyses...")
   
   # Create permutations of metrics to test for association
-  metrics_2way = permutations(n = length(data), r = 2, v = 1:length(data), repeats.allowed = FALSE)
+  metrics_2way = permutations(n = length(data), r = 2, 
+                              v = 1:length(data), repeats.allowed = FALSE)
+  metrics_2way = data.frame(A = metrics_2way[,1], B = metrics_2way[,2])
   
-  # If a variable of interest has been input, analyze data only related to that variable.
-  if (var_interest[[1]] != 0) {
-    temp = list()
-    for (i in 1:length(var_interest)) {
-      if (length(temp) == 0) {
-        temp = metrics_2way[metrics_2way[,1] == var_interest[[i]],]
-      } else {
-        temp = rbind(temp, metrics_2way[metrics_2way[,1] == var_interest[[i]],])
-      }
+  # Remove pairs that contain skipped variables
+  if (var_skip[[1]] != 0) {
+    for (i in 1:length(var_skip)) {
+      metrics_2way = metrics_2way[ which(metrics_2way$A != var_skip[[i]] &
+                                         metrics_2way$B != var_skip[[i]]), ]
     }
-    metrics_2way = temp
+  }
+  
+  # Retain only pairs that begin with variables of interest
+  if (var_interest[[1]] != 0) {
+    for (i in 1:length(var_interest)) {
+      metrics_2way = metrics_2way[ which(metrics_2way$A == var_interest[[i]]), ]
+    }
   }
 
   # if (stratifiers[[1]] != 0) {
