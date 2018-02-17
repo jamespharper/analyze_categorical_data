@@ -35,11 +35,6 @@ B = temp$IntndPitFull
 name = "ca_Dist-SR_IntndPitFull"
 plot_name = "Dist-SR_IntndPitFull"
 
-# Start sending text output to text file in folder
-# file1 = file(paste(getwd(), "/output/", name, ".txt", sep = ""))
-# sink(file1, append = TRUE)
-# sink(file1, append = TRUE, type = "message")
-
 # Add title to text file
 print(paste("A = Dist-SR", sep = ""))
 print(paste("B = IntndPitFull", sep = ""))
@@ -89,32 +84,16 @@ fviz_ca_col(freqs.ca, col.col = "cos2",
 fviz_cos2(freqs.ca, choice = "col", axes = 1:2)
 fviz_contrib(freqs.ca, choice = "col", axes = 1:2)
 
-# I don't think I have this kind of data
+# I don't have much of this kind of data
 data(children)
 freqs.ca = CA(children, row.sup = 15:18, col.sup = 6:8,
               graph = FALSE)
 fviz_ca_biplot(freqs.ca, repel = TRUE)
 
-plot3d.ca(freqs.ca, dim = c(1, 2, 3), map = "symmetric", what = c("all", "all"), 
-          contrib = c("none", "none"), col = c("#6666FF","#FF6666"), 
-          labcol  = c("#0000FF", "#FF0000"), pch = c(16, 1, 18, 9), 
-          labels = c(2, 2), sf = 0.00002, arrows  = c(FALSE, FALSE), ...)
 
 freqs.ca = ca(freqs)                      # ca package
 print(freqs.ca)
 print(summary(freqs.ca))
-
-
-
-
-# Stop saving text output to file
-# sink()
-# sink(type = "message")
-
-# Start saving plot to PDF
-# pdf(paste(getwd(), "/output/", name, ".pdf", sep = ""))
-
-# Generate correspondence analysis plots
 plot(freqs.ca, main = plot_name) # symmetric map
 plot(freqs.ca, main = plot_name, lines = TRUE)
 plot(freqs.ca, main = plot_name, arrows = c(TRUE, FALSE))
@@ -126,8 +105,7 @@ plot(freqs.ca, dim = c(1,2), map = "symmetric", what = c("all", "all"),
      labels = c(2, 2), laboffset = c(0, 0),
      arrows = c(FALSE, FALSE), lines = c(FALSE, FALSE), lwd = 1,
      xlab = "_auto_", ylab = "_auto_")
-
-
-# Stop saving plot to PDF
-# dev.off()
-# closeAllConnections()
+plot3d.ca(freqs.ca, dim = c(1, 2, 3), map = "symmetric", what = c("all", "all"), 
+          contrib = c("none", "none"), col = c("#6666FF","#FF6666"), 
+          labcol  = c("#0000FF", "#FF0000"), pch = c(16, 1, 18, 9), 
+          labels = c(2, 2), sf = 0.00002, arrows  = c(FALSE, FALSE))
