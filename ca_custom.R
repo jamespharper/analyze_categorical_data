@@ -10,7 +10,7 @@ source("functions.R")                                # Load custom functions
 load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
                  "ca", "extracat", "iplots", 
                  "FactoMineR", "gplots", "factoextra",
-                 "corrplot", "ggpubr"))
+                 "corrplot", "ggpubr", "rgl"))
 file_to_import = paste(getwd(), 
                        "/data/data_latowner_6monthpostconstruction.xlsx", 
                        sep = "")
