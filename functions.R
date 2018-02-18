@@ -297,38 +297,36 @@ correspondence_analysis = function(data, metric1, metric2) {
   plot2 = fviz_screeplot(freqs.ca, addlabels = TRUE, 
                                     ylim = c(0, 50))
   row = get_ca_row(freqs.ca)
-  fviz_ca_row(freqs.ca, col.row = "cos2",
+  plot3 = fviz_ca_row(freqs.ca, col.row = "cos2",
               gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), repel = TRUE)
-  corrplot(row$cos2, is.corr = FALSE)
-  fviz_cos2(freqs.ca, choice = "row", axes = 1:2)
-  corrplot(row$contrib, is.corr = FALSE)    
-  fviz_contrib(freqs.ca, choice = "row", axes = 1, top = 10)
-  fviz_contrib(freqs.ca, choice = "row", axes = 2, top = 10)
-  fviz_contrib(freqs.ca, choice = "row", axes = 1:2, top = 10)
-  fviz_ca_row(freqs.ca, col.row = "contrib",
+  plot4 = corrplot(row$cos2, is.corr = FALSE)
+  plot5 = fviz_cos2(freqs.ca, choice = "row", axes = 1:2)
+  plot6 = corrplot(row$contrib, is.corr = FALSE)    
+  plot7 = fviz_contrib(freqs.ca, choice = "row", axes = 1, top = 10)
+  plot8 = fviz_contrib(freqs.ca, choice = "row", axes = 2, top = 10)
+  plot9 = fviz_contrib(freqs.ca, choice = "row", axes = 1:2, top = 10)
+  plot10 = fviz_ca_row(freqs.ca, col.row = "contrib",
               gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
               repel = TRUE)
   
   col = get_ca_col(freqs.ca)
-  fviz_ca_col(freqs.ca, col.col = "cos2", 
+  plot11 = fviz_ca_col(freqs.ca, col.col = "cos2", 
               gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
               repel = TRUE)
-  corrplot(col$cos2, is.corr = FALSE)
-  fviz_cos2(freqs.ca, choice = "col", axes = 1:2)
-  corrplot(col$contrib, is.corr = FALSE)
-  fviz_contrib(freqs.ca, choice = "col", axes = 1, top = 10)
-  fviz_contrib(freqs.ca, choice = "col", axes = 2, top = 10)
-  fviz_contrib(freqs.ca, choice = "col", axes = 1:2, top = 10)
-  fviz_ca_col(freqs.ca, col.row = "contrib",
+  plot12 = corrplot(col$cos2, is.corr = FALSE)
+  plot13 = fviz_cos2(freqs.ca, choice = "col", axes = 1:2)
+  plot14 = corrplot(col$contrib, is.corr = FALSE)
+  plot15 = fviz_contrib(freqs.ca, choice = "col", axes = 1, top = 10)
+  plot16 = fviz_contrib(freqs.ca, choice = "col", axes = 2, top = 10)
+  plot17 = fviz_contrib(freqs.ca, choice = "col", axes = 1:2, top = 10)
+  plot18 = fviz_ca_col(freqs.ca, col.row = "contrib",
               gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
               repel = TRUE)
   
-  plot(freqs.ca, main = plot_name) # symmetric map
-  plot(freqs.ca, main = plot_name, mass = TRUE, contrib = "absolute", 
-       map = "rowgreen", arrows = c(FALSE, TRUE)) # asymmetric map
-  
   # Save plots to PDF
-  ggexport(plotlist = list(plot1, plot2), 
+  ggexport(plotlist = list(plot1, plot2, plot3, plot4, plot5, plot6, plot7,
+                           plot8, plot9, plot10, plot11, plot12, plot13,
+                           plot14, plot15, plot16, plot17, plot18), 
            filename = paste(getwd(), "/output/", name, ".pdf", sep = ""))
 }
 
