@@ -42,4 +42,7 @@ chisq_cramv = assocstats(freqs)
 data_frame = data.frame(A, B, C)
 
 # Create plots
-scpcp(data_frame, sel = "data[,3]")
+scpcp(data_frame, sel = "data[,2]")
+scpcp(data_frame, level.width = 0)
+scpcp(data_frame, gap = 0, sel = "data[,3]")
+scpcp(data_frame, sel.palette = "s")
