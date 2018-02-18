@@ -27,15 +27,15 @@ file_to_import = paste(getwd(),
                        sep = "")
 
 # Select tests to run; set equal to 0 to ignore
-Freqs = 0     # Frequency analysis as singles, pairs, or triplets (1, 2, or 3)
-CA = 1        # Correspondence Analysis
+Freqs = 3     # Frequency analysis as singles, pairs, or triplets (1, 2, or 3)
+CA = 0        # Correspondence Analysis
 MCA = 0       # Multiple Correspondence Analysis
 
 # Define variables; set equal to 0 to ignore
 var_skip = c(1, 4,        # Variables to skip during analyses
              7:10, 15:24) 
-var_interest = 5         # Variables of interest for two/three-way/CA analyses
-var_stratify = 44         # Stratifiers for two/three-way analysis
+var_interest = 44         # Variables of interest for two/three-way/CA analyses
+var_stratify = 0         # Stratifiers for two/three-way analysis
 quali_sup = 0             # Qualitative supplementary variables for CA
 quanti_sup = 0            # Quantitative supplementary variables for CA
 
