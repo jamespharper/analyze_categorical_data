@@ -27,8 +27,8 @@ file_to_import = paste(getwd(),
                        sep = "")
 
 # Select tests to run; set equal to 0 to ignore
-Freqs = 3     # Frequency analysis as singles, pairs, or triplets (1, 2, or 3)
-CA = 0        # Correspondence Analysis
+Freqs = 0     # Frequency analysis as singles, pairs, or triplets (1, 2, or 3)
+CA = 1        # Correspondence Analysis
 MCA = 0       # Multiple Correspondence Analysis
 
 # Define variables; set equal to 0 to ignore
@@ -168,7 +168,7 @@ if (CA == 1) {
   # Create permutations of metrics to test for association
   metrics_2way = permutations(n = length(data), r = 2, 
                               v = 1:length(data), repeats.allowed = FALSE)
-  metrics_2way = data.frame(A = metrics_2way[,1], B = metrics_2way[,2])
+  metrics_2way = data.frame(A = metrics_2way[, 1], B = metrics_2way[, 2])
   
   # Remove pairs that contain skipped variables
   if (var_skip[[1]] != 0) {
