@@ -21,25 +21,26 @@ load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
 ###############################################################################
 # USER INPUT
 ###############################################################################
-# Select tests to run; set equal to 0 to ignore
-Freqs = 1     # Frequency analysis as singles, pairs, or triplets (1, 2, or 3)
+# Select test to run; set others equal to 0 to ignore
+Freqs = 0     # Frequency analysis as singles, pairs, or triplets (1, 2, or 3)
 CA = 0        # Correspondence Analysis
 MCA = 1       # Multiple Correspondence Analysis
 
-# Select file to import
-# Freq/CA: /data/data_latowner_6monthpostconstruction.xlsx
-# MCA: /data/data_MCA_noneg.csv
-file_to_import = paste(getwd(), 
-                       "/data/data_latowner_6monthpostconstruction.xlsx", 
-                       sep = "")
+# Select file to import based on selected test
+file_to_import_freqs_ca = paste(getwd(), 
+                                "/data/data_latowner_6monthpostconst.xlsx", 
+                                sep = "")
+file_to_import_mca = paste(getwd(), 
+                           "/data/data_mca.csv", 
+                           sep = "")
 
 # Define variables; set equal to 0 to ignore
 var_skip = c(1, 4,        # Variables to skip during analyses
              7:10, 15:24) 
 var_interest = 44         # Variables of interest for two/three-way/CA analyses
-var_stratify = 5         # Stratifiers for two/three-way analysis
-quali_sup = 0             # Qualitative supplementary variables for MCA
-quanti_sup = 0            # Quantitative supplementary variables for MCA
+var_stratify = 5          # Stratifiers for two/three-way analysis
+quali_sup = c(16:40)      # Qualitative supplementary variables for MCA
+quanti_sup = c(41:52)     # Quantitative supplementary variables for MCA
 
 ###############################################################################
 # CHECK FOR PROBLEMS WITH USER INPUT
@@ -53,10 +54,10 @@ if ((Freqs != 0) + (CA != 0) + (MCA != 0) > 1) {
 # IMPORT AND CLEAN DATA
 ###############################################################################
 # Import data
-if (Freqs != 0 || CA != 0) {     # for frequency and correspondence analyses
-  data = import(file_to_import)
+if (Freqs != 0 || CA != 0) {
+  data = import(file_to_import_freqs_ca)
 } else if (MCA != 0) {
-  data = read.table(file_to_import, header = TRUE, sep = ",")
+  data = read.table(file_to_import_mca, header = TRUE, sep = ",")
   names(data)[1] = "RDefBefrNeiToi"
 }
 
