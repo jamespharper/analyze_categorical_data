@@ -3,7 +3,7 @@
 # Started October 1, 2017
 # Last updated February 13, 2018
 
-categorical_analysis_1way = function(data, metric1) {
+frequency_analysis_1way = function(data, metric1) {
   
   # Create temporary vector from data
   A = data[metric1][[1]]
@@ -38,7 +38,7 @@ categorical_analysis_1way = function(data, metric1) {
   
 }
 
-categorical_analysis_2way = function(data, metric1, metric2) {
+frequency_analysis_2way = function(data, metric1, metric2) {
   # Also used for stratified one-way categorical analysis
   
   # Create temporary vectors from data
@@ -144,7 +144,7 @@ categorical_analysis_2way = function(data, metric1, metric2) {
   
 }
 
-categorical_analysis_3way = function(data, metric1, metric2, metric3) {
+frequency_analysis_3way = function(data, metric1, metric2, metric3) {
   
   # Create temporary vectors from data
   A = data[metric1][[1]]
