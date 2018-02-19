@@ -332,10 +332,25 @@ correspondence_analysis = function(data, metric1, metric2) {
 
 multiple_correspondence_analysis = function(data, quali_sup, quanti_sup) {
   library(FactoMineR)
+  
+  # Create file name and plot name variables
+  name = paste("ca_", names(data)[[metric1]], "_", names(data)[[metric2]], 
+               sep = "")
+  plot_name = paste(names(data)[[metric1]], "_", names(data)[[metric2]],
+                    sep = "")
+  
+  # Start sending text output to text file in folder
+  file1 = file(paste(getwd(), "/output/", name, ".txt", sep = ""))
+  sink(file1, append = TRUE)
+  sink(file1, append = TRUE, type = "message")
+  
+  # Perform multiple correspondence analysis
   results = MCA(data, quali.sup = quali_sup, quanti.sup = quanti_sup)
+  
+  
   summary(results, ncp = 3, nbelements = Inf)
   dimdesc(results)
-  pdf(paste(getwd(),"/Output/plot.pdf", sep = ""))
+  # pdf(paste(getwd(),"/output/plot.pdf", sep = ""))
   plot(results, label = c("var","quali.sup"), cex = 0.7)
   plot(results, invisible = c("var","quali.sup"), cex = 0.7)
   plot(results, invisible = c("ind","quali.sup"), autoLab = "y", cex = 0.7, title = "Active Categories")
@@ -351,8 +366,12 @@ multiple_correspondence_analysis = function(data, quali_sup, quanti_sup) {
   plot(results, invisible = c("var","quali.sup"), cex = 0.7, select = "contrib 20", axes = 3:4)
   plot(results, invisible = c("ind"), cex = 0.7, select = "contrib 20", axes = 3:4)
   plotellipses(results, keepvar = c(1:4))
-  dev.off()
-  closeAllConnections()
+  
+  # Save plots to PDF
+  ggexport(plotlist = list(plot1, plot2, plot3, plot4, plot5, plot6, plot7,
+                           plot8, plot9, plot10, plot11, plot12, plot13,
+                           plot14, plot15, plot16, plot17, plot18), 
+           filename = paste(getwd(), "/output/", name, ".pdf", sep = ""))
 }
 
 save_text_output_to_file = function(subfolder, name) {
