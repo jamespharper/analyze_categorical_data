@@ -77,7 +77,7 @@ if (Freqs == 1) {
     
     # Run analyses
     print(num)
-    categorical_analysis_1way(data, num)
+    frequency_analysis_1way(data, num)
   }
 }
 
@@ -115,7 +115,7 @@ if (Freqs == 2) {
   # Run analyses
   for (num in 1:length(metrics_2way[,1])) {
     print(paste(metrics_2way[num,1],"_",metrics_2way[num,2]))
-    categorical_analysis_2way(data, metrics_2way[num,1], metrics_2way[num,2])
+    frequency_analysis_2way(data, metrics_2way[num,1], metrics_2way[num,2])
   }
 }
 
@@ -156,7 +156,7 @@ if (Freqs == 3) {
   for (num in 1:length(metrics_3way[,1])) {
     print(paste(metrics_3way[num, 1], "_", metrics_3way[num, 2], "_", 
                 metrics_3way[num, 3]))
-    categorical_analysis_3way(data, metrics_3way[num, 1], metrics_3way[num, 2], 
+    frequency_analysis_3way(data, metrics_3way[num, 1], metrics_3way[num, 2], 
                               metrics_3way[num, 3])
   }
 }
@@ -198,9 +198,6 @@ if (CA == 1) {
     correspondence_analysis(data, metrics_2way[num,1], metrics_2way[num,2])
   }
 }
-
-
-
 
 if (MCA == 1) {
   print("Running multiple correspondence analysis...")
