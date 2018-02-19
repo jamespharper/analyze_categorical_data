@@ -21,23 +21,25 @@ load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
 ###############################################################################
 # USER INPUT
 ###############################################################################
+# Select tests to run; set equal to 0 to ignore
+Freqs = 0     # Frequency analysis as singles, pairs, or triplets (1, 2, or 3)
+CA = 0        # Correspondence Analysis
+MCA = 1       # Multiple Correspondence Analysis
+
 # Select file to import
+# Freq/CA: /data/data_latowner_6monthpostconstruction.xlsx
+# MCA: /data/data_MCA_noneg.csv
 file_to_import = paste(getwd(), 
                        "/data/data_latowner_6monthpostconstruction.xlsx", 
                        sep = "")
-
-# Select tests to run; set equal to 0 to ignore
-Freqs = 3     # Frequency analysis as singles, pairs, or triplets (1, 2, or 3)
-CA = 0        # Correspondence Analysis
-MCA = 0       # Multiple Correspondence Analysis
 
 # Define variables; set equal to 0 to ignore
 var_skip = c(1, 4,        # Variables to skip during analyses
              7:10, 15:24) 
 var_interest = 44         # Variables of interest for two/three-way/CA analyses
 var_stratify = 5         # Stratifiers for two/three-way analysis
-quali_sup = 0             # Qualitative supplementary variables for CA
-quanti_sup = 0            # Quantitative supplementary variables for CA
+quali_sup = 0             # Qualitative supplementary variables for MCA
+quanti_sup = 0            # Quantitative supplementary variables for MCA
 
 ###############################################################################
 # CHECK FOR PROBLEMS WITH USER INPUT
@@ -46,12 +48,15 @@ quanti_sup = 0            # Quantitative supplementary variables for CA
 
 
 ###############################################################################
-# IMPORT DATA
+# IMPORT AND CLEAN DATA
 ###############################################################################
-# Import raw data
-data = import(file_to_import)
-# data = read.table("data_MCA_noneg.csv", header = TRUE, sep = ",")
-# names(data)[1] = "RDefBefrNeiToi"
+# Import data
+if (Freqs != 0 || CA != 0) {     # for frequency and correspondence analyses
+  data = import(file_to_import)
+} else if (MCA != 0) {
+  data = read.table(file_to_import, header = TRUE, sep = ",")
+  names(data)[1] = "RDefBefrNeiToi"
+}
 
 # Convert categorical data from characters into factors
 for (i in 1:length(names(data))) {
