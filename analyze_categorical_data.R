@@ -22,7 +22,7 @@ load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
 # USER INPUT
 ###############################################################################
 # Select tests to run; set equal to 0 to ignore
-Freqs = 0     # Frequency analysis as singles, pairs, or triplets (1, 2, or 3)
+Freqs = 1     # Frequency analysis as singles, pairs, or triplets (1, 2, or 3)
 CA = 0        # Correspondence Analysis
 MCA = 1       # Multiple Correspondence Analysis
 
@@ -45,7 +45,9 @@ quanti_sup = 0            # Quantitative supplementary variables for MCA
 # CHECK FOR PROBLEMS WITH USER INPUT
 ###############################################################################
 # Check if more than one test is selected
-
+if ((Freqs != 0) + (CA != 0) + (MCA != 0) > 1) {
+  stop("Please select only one test to perform.")
+}
 
 ###############################################################################
 # IMPORT AND CLEAN DATA
