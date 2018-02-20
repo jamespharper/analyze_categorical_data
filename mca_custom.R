@@ -9,18 +9,18 @@ source("functions.R")                                # Load custom functions
 load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
                  "ca", "extracat", "iplots", 
                  "FactoMineR", "gplots", "factoextra",
-                 "corrplot", "ggpubr", "rgl"))
+                 "corrplot", "ggpubr", "rgl", "missMDA"))
 
 ###############################################################################
 # LOAD, CLEAN AND CATEGORIZE DATA
 ###############################################################################
-file_to_import_mca = paste(getwd(), "/data/data_mca.csv", sep = "")
-data = import(file_to_import_freqs_mca)
-data = read.table(file_to_import_mca, header = TRUE, sep = ",")
-names(data)[1] = "IntndPitFull"
-data(tea)
-data(poison)
-head(poison, 3)
+file_to_import_mca = paste(getwd(), "/data/data_mca.xlsx", sep = "")
+data = import(file_to_import_mca)
+# data = read.table(file_to_import_mca, header = TRUE, sep = ",")
+# names(data)[1] = "IntndPitFull"
+# data(tea)
+# data(poison)
+# head(poison, 3)
 
 # Convert categorical data from characters into factors
 for (i in 1:length(names(data))) {
@@ -29,10 +29,15 @@ for (i in 1:length(names(data))) {
   }
 }
 
-# Categorize data
-data.active = data[ , 1:10]
-data.sup.quanti = data[ , 21:30]
-data.sup.quali = data[ , 11:20]
+# Convert year and month variables into factors
+data$Yr = as.factor(data$Yr)
+data$Mnth = as.factor(data$Mnth)
+
+# Select data with sufficient frequencies and categorize
+names(data)
+data.active = data[ , c(1:3, 5:8)]    # c(1:8)
+data.sup.quali = data[ , 9:46]
+data.sup.quanti = data[ , 47:56]
 
 ###############################################################################
 # PERFORM MULTIPLE CORRESPONDENCE ANALYSIS 
@@ -42,8 +47,22 @@ summary(data.active)
 summary(data.sup.quanti)
 summary(data.sup.quali)
 
+for (i in 1:length(data.active)) {
+  plot(data.active[, i], main = colnames(data.active)[i],
+       ylab = "Count", col = "steelblue")
+}
+
+
+require(missMDA)
+data(vnf)
+completed <- imputeMCA(vnf, ncp = 2)
+res.mca <- MCA(vnf,tab.disj=completed$tab.disj)
+
+
 # Perform multiple correspondence analysis
-results = MCA(data.active, quanti.sup = data.sup.quanti, quali.sup = data.sup.quali)
+results = MCA(X = data.active,
+              quali.sup = data.sup.quali,
+              quanti.sup = data.sup.quanti)
 results = MCA(tea, quanti.sup = 19, quali.sup = c(20:36))
 
 
