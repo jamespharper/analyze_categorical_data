@@ -33,7 +33,12 @@ for (i in 1:length(names(data))) {
 data$Yr = as.factor(data$Yr)
 data$Mnth = as.factor(data$Mnth)
 
-# Select data with sufficient frequencies and categorize
+# Select applicable data with sufficient frequencies
+temp1 = subset(data, Yr != "2014")
+temp2 = subset(temp1, Prov != "PP" & Prov != "KC" & Prov != "TO" & Prov != "KS")
+temp2 = droplevels(temp2)
+
+# Categorize data as active or supplementary (qualitative or quantitative)
 names(data)
 data.active = data[ , c(1:3, 5:8)]    # c(1:8), c(1:3, 5:8)
 data.sup.quali = data[ , 9:46]
@@ -52,13 +57,22 @@ for (i in 1:length(data.active)) {
        ylab = "Count", col = "steelblue")
 }
 
+
+require(missMDA)
+data(vnf)
+completed <- imputeMCA(vnf,ncp=2)
+res.mca <- MCA(vnf)
+res.mca <- MCA(vnf,tab.disj=completed$tab.disj)
+
+
 # Perform multiple correspondence analysis
-imputed = imputeMCA(don = data.active, ncp = 2)
-results = MCA(X = data.active, 
-              quali.sup = data.sup.quali,
-              quanti.sup = data.sup.quanti,
-              tab.disj = imputed$tab.disj)
-results = MCA(tea, quanti.sup = 19, quali.sup = c(20:36))
+results = MCA(X = data.active, na.method = "NA")
+# imputed = imputeMCA(don = data.active, ncp = 2)
+# results = MCA(X = data.active, 
+#               quali.sup = data.sup.quali,
+#               quanti.sup = data.sup.quanti,
+#               tab.disj = imputed$tab.disj)
+# results = MCA(tea, quanti.sup = 19, quali.sup = c(20:36))
 
 # Print results of multiple correspondence analysis
 print(results)
