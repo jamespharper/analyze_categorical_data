@@ -1,7 +1,6 @@
 ###############################################################################
 # INITIALIZE AND LOAD DATA
 ###############################################################################
-
 rm(list = ls())                                      # Clear global environment
 cat("\014")                                          # Clear console window
 file.remove(dir(paste(getwd(),"/output/", sep = ""), # Clear output folder
@@ -11,10 +10,17 @@ load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
                  "ca", "extracat", "iplots", 
                  "FactoMineR", "gplots", "factoextra",
                  "corrplot", "ggpubr", "rgl"))
-file_to_import = paste(getwd(), 
-                       "/data/data_latowner_6monthpostconstruction.xlsx", 
-                       sep = "")
-data = import(file_to_import)
+
+###############################################################################
+# LOAD, CLEAN AND CATEGORIZE DATA
+###############################################################################
+file_to_import_mca = paste(getwd(), "/data/data_mca.csv", sep = "")
+data = import(file_to_import_freqs_mca)
+data = read.table(file_to_import_mca, header = TRUE, sep = ",")
+names(data)[1] = "IntndPitFull"
+data(tea)
+data(poison)
+head(poison, 3)
 
 # Convert categorical data from characters into factors
 for (i in 1:length(names(data))) {
@@ -23,51 +29,50 @@ for (i in 1:length(names(data))) {
   }
 }
 
+# Categorize data
+data.active = data[ , 1:10]
+data.sup.quanti = data[ , 21:30]
+data.sup.quali = data[ , 11:20]
+
 ###############################################################################
-# Correspondence Analysis - Subsets of Districts and Intention When Pit Fills
+# PERFORM MULTIPLE CORRESPONDENCE ANALYSIS 
 ###############################################################################
-# Create temporary vectors and name variables from data
-temp = subset(data, Prov == "SR", select = c(Dist, IntndPitFull))
-temp = droplevels(temp)
-A = temp$Dist
-A = substring(A, 4)
-B = temp$IntndPitFull
-name = "ca_Dist-SR_IntndPitFull"
-plot_name = "Dist-SR_IntndPitFull"
+# Summarize data
+summary(data.active)
+summary(data.sup.quanti)
+summary(data.sup.quali)
 
 # Perform multiple correspondence analysis
-results = MCA(data, quali.sup = quali_sup, quanti.sup = quanti_sup)
+results = MCA(data.active, quanti.sup = data.sup.quanti, quali.sup = data.sup.quali)
+results = MCA(tea, quanti.sup = 19, quali.sup = c(20:36))
 
-# Create file name and plot name variables
+
+# Create temporary vectors and name variables from data
 name = "mca"
 plot_name = name
-
-# Start sending text output to text file in folder
-file1 = file(paste(getwd(), "/output/", name, ".txt", sep = ""))
-sink(file1, append = TRUE)
-sink(file1, append = TRUE, type = "message")
 
 # Print results from multiple correspondence analysis
 summary(results, ncp = 3, nbelements = Inf)
 dimdesc(results)
 
-# Stop saving text output to file
-sink()
-sink(type = "message")
-
 # Generate plots and store in variables
-plot1 = recordPlot(plot(results, label = c("var","quali.sup"), cex = 0.7))
-plot2 = recordPlot(plot(results, invisible = c("var","quali.sup"), cex = 0.7))
-plot3 = recordPlot(plot(results, invisible = c("ind","quali.sup"), autoLab = "y", cex = 0.7, title = "Active Categories"))
-plot4 = recordPlot(plot(results, invisible = c("ind","quali.sup"), autoLab = "y", cex = 0.7, title = "Active Categories", selectMod = "contrib 20"))
-plot5 = recordPlot(plot(results, invisible = c("ind","quali.sup"), cex = 0.7, title = "Active Categories"))
-plot6 = recordPlot(plot(results, invisible = c("ind","var"), autoLab = "y", cex = 0.7, title = "Supplementary Categories"))
-plot7 = recordPlot(plot(results, invisible = "ind", autoLab = "y", cex = 0.7, selectMod = "cos2 10"))
-plot8 = recordPlot(plot(results, invisible = "ind", autoLab = "y", cex = 0.7, selectMod = "contrib 20"))
-plot9 = recordPlot(plot(results, invisible = c("var","quali.sup"), autoLab = "y", cex = 0.7, select = "cos2 10"))
-plot10 = recordPlot(plot(results, autoLab = "y", cex = 0.7, selectMod = "cos2 20", select = "cos2 10"))
-plot11 = recordPlot(plot(results, choix = "var", xlim = c(0,0.6), ylim = c(0,0.6)))
-plot12 = recordPlot(plot(results, choix = "var", xlim = c(0,0.6), ylim = c(0,0.6), invisible = c("ind","quali.sup")))
-plot13 = recordPlot(plot(results, invisible = c("var","quali.sup"), cex = 0.7, select = "contrib 20", axes = 3:4))
-plot14 = recordPlot(plot(results, invisible = c("ind"), cex = 0.7, select = "contrib 20", axes = 3:4))
-plot15 = recordPlot(plotellipses(results, keepvar = c(1:4)))
+plot.MCA(results, invisible = c("ind", "quanti.sup", "quali.sup"))   # Variables
+plot.MCA(results, invisible = c("var", "quanti.sup", "quali.sup"))   # Individuals
+plot.MCA(results, invisible = c("var", "ind", "quali.sup"), cex = 0.7)
+plot.MCA(results, invisible = c("var", "ind", "quanti.sup"), cex = 0.7)
+plot(results, label = c("var","quali.sup"), cex = 0.7)
+plot(results, label = c("var"), cex = 0.7)
+plot(results, invisible = c("var","quali.sup"), cex = 0.7)
+plot(results, invisible = c("ind","quali.sup"), autoLab = "y", cex = 0.7, title = "Active Categories")
+plot(results, invisible = c("ind","quali.sup"), autoLab = "y", cex = 0.7, title = "Active Categories", selectMod = "contrib 20")
+plot(results, invisible = c("ind","quali.sup"), cex = 0.7, title = "Active Categories")
+plot(results, invisible = c("ind","var"), autoLab = "y", cex = 0.7, title = "Supplementary Categories")
+plot(results, invisible = "ind", autoLab = "y", cex = 0.7, selectMod = "cos2 10")
+plot(results, invisible = "ind", autoLab = "y", cex = 0.7, selectMod = "contrib 20")
+plot(results, invisible = c("var","quali.sup"), autoLab = "y", cex = 0.7, select = "cos2 10")
+plot(results, autoLab = "y", cex = 0.7, selectMod = "cos2 20", select = "cos2 10")
+plot(results, choix = "var", xlim = c(0,0.6), ylim = c(0,0.6))
+plot(results, choix = "var", xlim = c(0,0.6), ylim = c(0,0.6), invisible = c("ind","quali.sup"))
+plot(results, invisible = c("var","quali.sup"), cex = 0.7, select = "contrib 20", axes = 3:4)
+plot(results, invisible = c("ind"), cex = 0.7, select = "contrib 20", axes = 3:4)
+plotellipses(results, keepvar = c(1:4))
