@@ -14,7 +14,7 @@ load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
 ###############################################################################
 # LOAD, CLEAN AND CATEGORIZE DATA
 ###############################################################################
-file_to_import_mca = paste(getwd(), "/data/data_mca.xlsx", sep = "")
+file_to_import_mca = paste(getwd(), "/data/data_mca_noNAs.xlsx", sep = "")
 data = import(file_to_import_mca)
 # data = read.table(file_to_import_mca, header = TRUE, sep = ",")
 # names(data)[1] = "IntndPitFull"
@@ -35,7 +35,7 @@ data$Mnth = as.factor(data$Mnth)
 
 # Select data with sufficient frequencies and categorize
 names(data)
-data.active = data[ , c(1:3, 5:8)]    # c(1:8)
+data.active = data[ , c(1:3, 5:8)]    # c(1:8), c(1:3, 5:8)
 data.sup.quali = data[ , 9:46]
 data.sup.quanti = data[ , 47:56]
 
@@ -52,18 +52,16 @@ for (i in 1:length(data.active)) {
        ylab = "Count", col = "steelblue")
 }
 
-
-require(missMDA)
-data(vnf)
-completed <- imputeMCA(vnf, ncp = 2)
-res.mca <- MCA(vnf,tab.disj=completed$tab.disj)
-
-
 # Perform multiple correspondence analysis
-results = MCA(X = data.active,
+imputed = imputeMCA(don = data.active, ncp = 2)
+results = MCA(X = data.active, 
               quali.sup = data.sup.quali,
-              quanti.sup = data.sup.quanti)
+              quanti.sup = data.sup.quanti,
+              tab.disj = imputed$tab.disj)
 results = MCA(tea, quanti.sup = 19, quali.sup = c(20:36))
+
+# Print results of multiple correspondence analysis
+print(results)
 
 
 # Create temporary vectors and name variables from data
