@@ -34,9 +34,9 @@ data$Yr = as.factor(data$Yr)
 data$Mnth = as.factor(data$Mnth)
 
 # Select applicable data with sufficient frequencies
-temp1 = subset(data, Yr != "2014")
-temp2 = subset(temp1, Prov != "PP" & Prov != "KC" & Prov != "TO" & Prov != "KS")
-temp2 = droplevels(temp2)
+data = subset(data, Yr != "2014")
+data = subset(data, Prov != "PP" & Prov != "KC" & Prov != "TO" & Prov != "KS")
+data = droplevels(data)
 
 # Categorize data as active or supplementary (qualitative or quantitative)
 names(data)
@@ -57,12 +57,12 @@ for (i in 1:length(data.active)) {
        ylab = "Count", col = "steelblue")
 }
 
-
+# Impute data due to missing data (NOT WORKING)
 require(missMDA)
 data(vnf)
-completed <- imputeMCA(vnf,ncp=2)
-res.mca <- MCA(vnf)
-res.mca <- MCA(vnf,tab.disj=completed$tab.disj)
+completed = imputeMCA(vnf, ncp = 2)
+res.mca = MCA(vnf)
+res.mca = MCA(vnf,tab.disj=completed$tab.disj)
 
 
 # Perform multiple correspondence analysis
