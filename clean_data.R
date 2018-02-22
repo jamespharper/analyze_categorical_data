@@ -36,6 +36,12 @@ data$Date = as.Date(data$Date)                          # Date into date format
 drops = c("NewName1", "NewName2")
 data = data[, !(names(data) %in% drops)]
 
+# Rename responses in IDPoorTyp
+summary(data$Var1)                                           # Before
+levels(data$Var1)[match("Long name that should be shorter",
+                        levels(data$Var1))] = "Shorter name"
+summary(data$IDPoorTyp)                                      # After
+
 # Create Yr and Mnth variables as factors
 data$Yr = as.factor(format(as.Date(data$Date, format="%Y-%m-%d"),"%Y"))
 data$Mnth = as.factor(format(as.Date(data$Date, format="%Y-%m-%d"),"%m"))
