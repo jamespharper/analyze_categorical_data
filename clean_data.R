@@ -36,6 +36,11 @@ data$Date = as.Date(data$Date)                          # Date into date format
 drops = c("NewName1", "NewName2")
 data = data[, !(names(data) %in% drops)]
 
+# Remove rows with an empty variable
+summary(data$Var1)                                      # Before
+data = subset(data, !is.na(Var1))
+summary(data$Var1)                                      # After
+
 # Rename responses in IDPoorTyp
 summary(data$Var1)                                           # Before
 levels(data$Var1)[match("Long name that should be shorter",
