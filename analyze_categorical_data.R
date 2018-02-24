@@ -58,14 +58,15 @@ if (Freqs != 0 || CA != 0) {
 } else if (MCA != 0) {
   data = read.table(file_to_import_mca, header = TRUE, sep = ",")
   names(data)[1] = "RDefBefrNeiToi"
-}
-
-# Convert categorical data from characters into factors
-for (i in 1:length(names(data))) {
-  if (is.character(data[i][[1]])) {
-    data[i][[1]] = as.factor(data[i][[1]])
+  
+  # Convert categorical data from characters into factors
+  for (i in 1:length(names(data))) {
+    if (is.character(data[i][[1]])) {
+      data[i][[1]] = as.factor(data[i][[1]])
+    }
   }
 }
+
 # str(data)
 # summary(data)
 
