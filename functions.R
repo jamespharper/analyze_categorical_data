@@ -12,11 +12,11 @@ frequency_analysis_1way = function(data, metric1, return = 0) {
     title = paste("A = ", names(data)[[metric1]], sep = "")
     }
   else if (is.character(metric1)) {
-    A = data[metric1]
+    A = unlist(data[metric1])
     name = paste("freqs_1way_", metric1, sep = "")
     title = paste("A = ", metric1, sep = "")
   }
-  else (stop("ERROR: Variable not found in data."))
+  else {stop("ERROR: Variable not found in data.")}
   
   # Perform categorical analyses and store results for printing below
   freqs = table(A)
@@ -60,12 +60,12 @@ frequency_analysis_2way = function(data, metric1, metric2, return = 0) {
     name_metric2 = names(data)[[metric2]]
   }
   else if (is.character(metric1) && is.character(metric2)) {
-    A = data[metric1]
-    B = data[metric2]
+    A = unlist(data[metric1])
+    B = unlist(data[metric2])
     name_metric1 = metric1
     name_metric2 = metric2
   }
-  else (stop("ERROR: Variable not found in data, and metrics not same type."))
+  else {stop("ERROR: Variable not found in data, and metrics not same type.")}
   
   # Start sending text output to dump file
   file1 = file(paste(getwd(),"/Output/dump.txt", sep = ""))
@@ -112,11 +112,11 @@ frequency_analysis_2way = function(data, metric1, metric2, return = 0) {
     sink(file1, append = TRUE, type = "message")
   }
   
-  # Add title to text file
+  # Print title
   print(paste("A = ", name_metric1, sep = ""))
   print(paste("B = ", name_metric2, sep = ""))
   
-  # Print results of analyses to text file
+  # Print results of analyses
   print(CrossTable(A, B))
   # print(ftable(freqs))
   print(summary(freqs))
@@ -432,4 +432,23 @@ load_libraries = function(libs) {
       require(p, character.only = TRUE)
     }
   }
+}
+
+cor.mtest <- function(mat, ...) {
+  # From http://www.sthda.com/english/wiki/visualize-correlation-matrix-using-correlogram
+  # Compute the p-value matrix of a cor() matrix
+  # mat : is a matrix of data
+  # ... : further arguments to pass to the native R cor.test function
+  mat <- as.matrix(mat)
+  n <- ncol(mat)
+  p.mat <- matrix(NA, n, n)
+  diag(p.mat) <- 0
+  for (i in 1:(n - 1)) {
+    for (j in (i + 1):n) {
+      tmp <- cor.test(mat[, i], mat[, j], ...)
+      p.mat[i, j] <- p.mat[j, i] <- tmp$p.value
+    }
+  }
+  colnames(p.mat) <- rownames(p.mat) <- colnames(mat)
+  p.mat
 }
