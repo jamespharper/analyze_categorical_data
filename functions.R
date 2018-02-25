@@ -3,20 +3,28 @@
 # Started October 1, 2017
 # Last updated February 13, 2018
 
-frequency_analysis_1way = function(data, metric1) {
+frequency_analysis_1way = function(data, metric1, return = 0) {
   
-  # Create temporary vector from data
-  A = data[metric1][[1]]
+  # Create temporary data vector and name variable
+  if (is.numeric(metric1)) {
+    A = data[metric1][[1]]
+    name = paste("freqs_1way_", names(data)[[metric1]], sep = "")
+    title = paste("A = ", names(data)[[metric1]], sep = "")
+    }
+  else if (is.character(metric1)) {
+    A = data[metric1]
+    name = paste("freqs_1way_", metric1, sep = "")
+    title = paste("A = ", metric1, sep = "")
+  }
+  else (stop("ERROR: Variable not found in data."))
   
   # Perform categorical analyses and store results for printing below
   freqs = table(A)
   freqs_prop = prop.table(freqs)
   freqs_prop_df = data.frame(Response = names(freqs_prop), 
                              Proportion = as.numeric(freqs_prop))
+  freqs = freqs[order(-freqs)]
   freqs_prop_df = freqs_prop_df[order(-freqs_prop_df$Proportion),]
-  
-  # Create file name variable
-  name = paste("freqs_1way_", names(data)[[metric1]], sep = "")
   
   # Start sending text output to text file
   file1 = file(paste(getwd(),"/output/", name, ".txt", sep = ""))
@@ -24,7 +32,7 @@ frequency_analysis_1way = function(data, metric1) {
   sink(file1, append = TRUE, type = "message")
 
   # Add title to text file
-  print(paste("A = ", names(data)[[metric1]], sep = ""))
+  print(title)
 
   # Print results of analyses to text file
   print(summary(freqs))
@@ -36,14 +44,28 @@ frequency_analysis_1way = function(data, metric1) {
   sink(type = "message")
   closeAllConnections()
   
+  # Return frequencies if user selected
+  if (return == 1) {return(list(freqs, freqs_prop_df))}
+  
 }
 
-frequency_analysis_2way = function(data, metric1, metric2) {
+frequency_analysis_2way = function(data, metric1, metric2, return = 0) {
   # Also used for stratified one-way categorical analysis
   
-  # Create temporary vectors from data
-  A = data[metric1][[1]]
-  B = data[metric2][[1]]
+  # Create temporary data vector and name variable
+  if (is.numeric(metric1) && is.numeric(metric2)) {
+    A = data[metric1][[1]]
+    B = data[metric2][[1]]
+    name_metric1 = names(data)[[metric1]]
+    name_metric2 = names(data)[[metric2]]
+  }
+  else if (is.character(metric1) && is.character(metric2)) {
+    A = data[metric1]
+    B = data[metric2]
+    name_metric1 = metric1
+    name_metric2 = metric2
+  }
+  else (stop("ERROR: Variable not found in data, and metrics not same type."))
   
   # Start sending text output to dump file
   file1 = file(paste(getwd(),"/Output/dump.txt", sep = ""))
@@ -53,58 +75,46 @@ frequency_analysis_2way = function(data, metric1, metric2) {
   # Perform categorical analyses
   freqs = table(A, B)
   # print(freqs)
-  # freqs = freqs[order(-freqs[,1]),]              # Sort table by frequency in first column
+  # freqs = freqs[order(-freqs[,1]),]    # Sort table by freq in 1st column
   # print(freqs)
-  # print(fisher.test(freqs))                      # Fisher Exact test
-  chisq_cramv = assocstats(freqs)                # Calculate chi squared and Cramer's V
+  # print(fisher.test(freqs))            # Fisher Exact test
+  chisq_cramv = assocstats(freqs)        # Calculate chi squared and Cramer's V
   
   # Stop sending text output to dump file
   sink()
   sink(type = "message")
   
-  # Create file name and plot name variables that includes p-value and Cramer's V
+  # Create file name and plot name variables using p-value and Cramer's V
   p_value = round(chisq_cramv$chisq_tests[2,3], digits = 3)
   chisqd = round(chisq_cramv$chisq_tests[2,1], digits = 3)
   cramer_v = round(chisq_cramv$cramer, digits = 3)
-  name = paste("freqs_2way_", p_value, "_", chisqd, "_", cramer_v, "_", names(data)[[metric1]], "_", names(data)[[metric2]], sep = "")
-  plot_name = paste(names(data)[[metric1]], "_", names(data)[[metric2]], "_", p_value, "_", chisqd, "_", cramer_v, sep = "")
+  name = paste("freqs_2way_", p_value, "_", chisqd, "_", cramer_v, "_",
+               name_metric1, "_", name_metric1, sep = "")
+  plot_name = paste(name_metric1, "_", name_metric2, "_", p_value, "_",
+                    chisqd, "_", cramer_v, sep = "")
   
   # Start sending text output to text file in a given folder based on p_values
   if (is.nan(p_value)) {
-    
-    # Create output folder
-    folder = create_folder(subfolder = "p is NaN")
-    
-    # Start sending text output to text file in folder
-    file1 = file(paste(folder, "/", name, ".txt", sep = ""))
+    folder = create_folder(subfolder = "p is NaN")       # Create output folder
+    file1 = file(paste(folder, "/", name,                # Save text to file 
+                       ".txt", sep = ""))
     sink(file1, append = TRUE)
     sink(file1, append = TRUE, type = "message")
-    
   } else if (p_value > 0.05) {
-    
-    # Create output folder
     folder = create_folder(subfolder = "p above 0.05")
-    
-    # Start sending text output to text file in folder
     file1 = file(paste(folder, "/", name, ".txt", sep = ""))
     sink(file1, append = TRUE)
     sink(file1, append = TRUE, type = "message")
-    
   } else {
-    
-    # Create output folder
     folder = create_folder(subfolder = "")
-    
-    # Start sending text output to text file in folder
     file1 = file(paste(folder, "/", name, ".txt", sep = ""))
     sink(file1, append = TRUE)
     sink(file1, append = TRUE, type = "message")
-    
   }
   
   # Add title to text file
-  print(paste("A = ", names(data)[[metric1]], sep = ""))
-  print(paste("B = ", names(data)[[metric2]], sep = ""))
+  print(paste("A = ", name_metric1, sep = ""))
+  print(paste("B = ", name_metric2, sep = ""))
   
   # Print results of analyses to text file
   print(CrossTable(A, B))
@@ -119,28 +129,32 @@ frequency_analysis_2way = function(data, metric1, metric2) {
   # Start saving plot to PDF in a given folder based on p_values
   if (is.nan(p_value)) {
     folder = create_folder(subfolder = "p is NaN")       # Create output folder
-    pdf(paste(folder, "/", name, ".pdf", sep = ""))      # Start saving plot to PDF in folder
+    pdf(paste(folder, "/", name, ".pdf", sep = ""))      # Save plot to PDF
   } else if (p_value > 0.05) {
-    folder = create_folder(subfolder = "p above 0.05")   # Create output folder
-    pdf(paste(folder, "/", name, ".pdf", sep = ""))      # Start saving plot to PDF in folder
+    folder = create_folder(subfolder = "p above 0.05")
+    pdf(paste(folder, "/", name, ".pdf", sep = ""))
   } else {
-    folder = create_folder(subfolder = "")               # Create output folder
-    pdf(paste(folder, "/", name, ".pdf", sep = ""))      # Start saving plot to PDF in folder
+    folder = create_folder(subfolder = "")
+    pdf(paste(folder, "/", name, ".pdf", sep = ""))
   }
   
   # Generate categorical analysis plots
   if (length(freqs[,1]) < 50) {
-    mosaic(freqs, shade = TRUE, legend = TRUE, main = plot_name)          # Mosaic plot
+    mosaic(freqs, shade = TRUE, legend = TRUE, main = plot_name)
     balloonplot(freqs, main = name)
   } else {
-    mosaic(freqs, shade = TRUE, legend = TRUE, main = plot_name)          # Mosaic plot
+    mosaic(freqs, shade = TRUE, legend = TRUE, main = plot_name)
     balloonplot(freqs, main = name)
-    # barplot(table(B,A), main=name, legend = colnames(freqs))       # Stacked bar plot with legend
+    # Stacked bar plot with legend
+    # barplot(table(B,A), main=name, legend = colnames(freqs))
   }
   
   # Stop sending plot output to file
   dev.off()
   closeAllConnections()
+  
+  # Return frequencies if user selected
+  if (return == 1) {return(list(freqs, chisq_cramv))}
   
 }
 
