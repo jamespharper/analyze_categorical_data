@@ -1,7 +1,7 @@
 # Analysis of Surveys of Rural Cambodian Latrine Owners
 # Written by James Harper, PE, ENV SP of the University of Colorado Boulder
 # Started October 1, 2017
-# Last updated February 13, 2018
+# Last updated February 24, 2018
 # Useful References: https://www.statmethods.net/stats/frequencies.html, 
 #                    www.mit.edu/~6.s085/notes/lecture6.pdf 
 
