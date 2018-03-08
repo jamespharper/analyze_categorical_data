@@ -14,35 +14,24 @@ load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
 ###############################################################################
 # LOAD, CLEAN AND CATEGORIZE DATA
 ###############################################################################
-file_to_import_mca = paste(getwd(), "/data/data_mca_noNAs.xlsx", sep = "")
-data = import(file_to_import_mca)
+# Load data file
+load(file = "iDE_Oct2017.RData")
+# file_to_import_mca = paste(getwd(), "/data/data_mca_noNAs.xlsx", sep = "")
+# data = import(file_to_import_mca)
 # data = read.table(file_to_import_mca, header = TRUE, sep = ",")
 # names(data)[1] = "IntndPitFull"
 # data(tea)
 # data(poison)
 # head(poison, 3)
 
-# Convert categorical data from characters into factors
-for (i in 1:length(names(data))) {
-  if (is.character(data[i][[1]])) {
-    data[i][[1]] = as.factor(data[i][[1]])
-  }
-}
+# Modify variable responses for MCA
 
-# Convert year and month variables into factors
-data$Yr = as.factor(data$Yr)
-data$Mnth = as.factor(data$Mnth)
-
-# Select applicable data with sufficient frequencies
-data = subset(data, Yr != "2014")
-data = subset(data, Prov != "PP" & Prov != "KC" & Prov != "TO" & Prov != "KS")
-data = droplevels(data)
 
 # Categorize data as active or supplementary (qualitative or quantitative)
 names(data)
-data.active = data[ , c(1:3, 5:8)]    # c(1:8), c(1:3, 5:8)
-data.sup.quali = data[ , 9:46]
-data.sup.quanti = data[ , 47:56]
+data.active = subset(data, select = c("IntndPitFull"))    # c(1:8), c(1:3, 5:8)
+data.sup.quali = ""    # data[ , 9:46]
+data.sup.quanti = ""    # data[ , 47:56]
 
 ###############################################################################
 # PERFORM MULTIPLE CORRESPONDENCE ANALYSIS 
@@ -76,6 +65,17 @@ results = MCA(X = data.active, na.method = "NA")
 
 # Print results of multiple correspondence analysis
 print(results)
+
+
+
+# Tea example
+data(tea)
+res.mca = MCA(tea, quanti.sup=19, quali.sup=c(20:36))
+plot.MCA(res.mca, invisible=c("var","quali.sup"), cex=0.7)
+plot.MCA(res.mca, invisible=c("ind","quali.sup"), cex=0.7)
+plot.MCA(res.mca, invisible=c("ind"))
+plot.MCA(res.mca, invisible=c("ind", "var"))
+
 
 
 # Create temporary vectors and name variables from data
