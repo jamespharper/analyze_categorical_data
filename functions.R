@@ -89,7 +89,7 @@ frequency_analysis_2way = function(data, metric1, metric2, return = 0) {
   chisqd = round(chisq_cramv$chisq_tests[2,1], digits = 3)
   cramer_v = round(chisq_cramv$cramer, digits = 3)
   name = paste("freqs_2way_", p_value, "_", chisqd, "_", cramer_v, "_",
-               name_metric1, "_", name_metric1, sep = "")
+               name_metric1, "_", name_metric2, sep = "")
   plot_name = paste(name_metric1, "_", name_metric2, "_", p_value, "_",
                     chisqd, "_", cramer_v, sep = "")
   
@@ -154,7 +154,7 @@ frequency_analysis_2way = function(data, metric1, metric2, return = 0) {
   closeAllConnections()
   
   # Return frequencies if user selected
-  if (return == 1) {return(list(freqs, chisq_cramv))}
+  if (return == 1) {return(list(name, freqs, chisq_cramv))}
   
 }
 
