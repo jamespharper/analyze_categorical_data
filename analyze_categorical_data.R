@@ -10,8 +10,8 @@
 ###############################################################################
 rm(list = ls())                                      # Clear global environment
 cat("\014")                                          # Clear console window
-file.remove(dir(paste(getwd(),"/output/", sep = ""), # Clear output folder
-                full.names = TRUE))    
+# file.remove(dir(paste(getwd(),"/output/", sep = ""), # Clear output folder
+#                 full.names = TRUE))
 source("functions.R")                                # Load custom functions
 load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
                  "ca", "extracat", "iplots", 
@@ -22,8 +22,8 @@ load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
 # USER INPUT
 ###############################################################################
 # Select test to run; set others equal to 0 to ignore
-Freqs = 1     # Frequency analysis as singles, pairs, or triplets (1, 2, or 3)
-CA = 0        # Correspondence Analysis
+Freqs = 0     # Frequency analysis as singles, pairs, or triplets (1, 2, or 3)
+CA = 1        # Correspondence Analysis
 MCA = 0       # Multiple Correspondence Analysis
 
 # Select file to import based on selected test
@@ -35,11 +35,15 @@ file_to_import_mca = paste(getwd(),
                            sep = "")
 
 # Define variables; set equal to 0 to ignore
-var_skip = c()        # Variables to skip during analyses
-var_interest = 0         # Variables of interest for two/three-way/CA analyses
-var_stratify = 0          # Stratifiers for two/three-way analysis
-quali_sup = c(16:40)      # Qualitative supplementary variables for MCA
-quanti_sup = c(41:52)     # Quantitative supplementary variables for MCA
+var_skip = 0        # Variables to skip during analyses
+var_interest = 71
+# var_interest = c("Prov", "IntndChng_Shltr",
+#                  "IntndChng_Shwr", "IntndChng_HndWsh",
+#                  "IntndChng_WtrRes", "IntndChng_2pit",
+#                  "IntndChng_Othr", "IntndChng_NAAlwysToi")         # Variable of interest for two/three-way/CA/MCA analyses
+var_stratify = 4          # Stratifiers for two/three-way analysis
+quali_sup = c()      # Qualitative supplementary variables for MCA
+quanti_sup = c()     # Quantitative supplementary variables for MCA
 
 ###############################################################################
 # CHECK FOR PROBLEMS WITH USER INPUT
@@ -58,7 +62,7 @@ if (Freqs != 0 || CA != 0) {
 } else if (MCA != 0) {
   data = read.table(file_to_import_mca, header = TRUE, sep = ",")
   names(data)[1] = "RDefBefrNeiToi"
-  
+
   # Convert categorical data from characters into factors
   for (i in 1:length(names(data))) {
     if (is.character(data[i][[1]])) {
@@ -209,6 +213,11 @@ if (CA == 1) {
 
 if (MCA == 1) {
   print("Running multiple correspondence analysis...")
+  
+  # Retain variables of interest
+  if (var_interest[[1]] != 0) {
+    data = data[var_interest]
+  }
   
   # Run multiple correspondence analysis
   multiple_correspondence_analysis(data, quali_sup, quanti_sup)
