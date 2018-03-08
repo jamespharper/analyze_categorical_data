@@ -109,3 +109,21 @@ plot3d.ca(freqs.ca, dim = c(1, 2, 3), map = "symmetric", what = c("all", "all"),
           contrib = c("none", "none"), col = c("#6666FF","#FF6666"), 
           labcol  = c("#0000FF", "#FF0000"), pch = c(16, 1, 18, 9), 
           labels = c(2, 2), sf = 0.00002, arrows  = c(FALSE, FALSE))
+
+###############################################################################
+# Correspondence Analysis - Subsets of Districts and Intention When Pit Fills
+###############################################################################
+
+
+
+
+freqs_prov = subset(data,
+                    Prov != "Takeo" & Prov != "Kampong Cham" &
+                      Prov != "Kampong Speu" & Prov != "Phnom Penh" &
+                      Yr != "2014",
+                    select = c("Prov", "IntndChng_Shltr",
+                               "IntndChng_Shwr", "IntndChng_HndWsh",
+                               "IntndChng_WtrRes", "IntndChng_2pit",
+                               "IntndChng_Othr", "IntndChng_NAAlwysToi"))
+freqs_prov = droplevels(freqs_prov)
+summary(freqs_prov, maxsum = 15)
