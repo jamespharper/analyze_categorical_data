@@ -24,49 +24,125 @@ load(file = "iDE_Oct2017.RData")
 # data(poison)
 # head(poison, 3)
 
-# Modify variable responses for MCA
+# Remove NAs and low-freq responses as needed
+sapply(data, function(x) sum(is.na(x)))
+sapply(data, function(x) length(which(!is.na(x))))
+data = subset(data, !is.na(IntndPitFull))
+data = subset(data, !is.na(IntndChng_Shltr))
+data$Satis[is.na(data$Satis)] = round(mean(as.numeric(data$Satis), na.rm = T), digits = 0)
+data$Satis[data$Satis == "DK"] = round(mean(as.numeric(data$Satis), na.rm = T), digits = 0)
+data$Satis = factor(data$Satis)
+data$SatisSup[data$SatisSup == "DK"] = round(mean(as.numeric(data$SatisSup), na.rm = T), digits = 0)
+data$SatisSup = factor(data$SatisSup)
+data$RecSup[is.na(data$RecSup)] = sample(c("Yes", "No"), 1, replace = TRUE)
+data$AdltUseLat[is.na(data$AdltUseLat)] = "Freq"
+data$AdltUseLat = factor(data$AdltUseLat)
+data$ChldUseLat[is.na(data$ChldUseLat)] = "DK/NA"
+data$ChldUseLat[data$ChldUseLat == "NoChld"] = "DK/NA"
+data$ChldUseLat = factor(data$ChldUseLat)
+data$InfLatDump[is.na(data$InfLatDump)] = "DK/NA"
+data$InfLatDump[data$InfLatDump == "NoInf"] = "DK/NA"
+data$InfLatDump = factor(data$InfLatDump)
 
+# Collapse satisfaction variables to binary
+summary(data$Satis)
+levels(data$Satis) = c("3", "2", "4", "1", "5", "Sat", "Unsat")
+data$Satis[data$Satis == "5" | data$Satis == "4"] = "Sat"
+data$Satis[data$Satis == "3" | data$Satis == "2" | data$Satis == "1"] = "Unsat"
+data$Satis = factor(data$Satis)
+summary(data$Satis)
+summary(data$SatisSup)
+levels(data$SatisSup) = c("3", "2", "4", "1", "5", "Sat", "Unsat")
+data$SatisSup[data$SatisSup == "5" | data$SatisSup == "4"] = "Sat"
+data$SatisSup[data$SatisSup == "3" | data$SatisSup == "2" | data$SatisSup == "1"] = "Unsat"
+data$SatisSup = factor(data$SatisSup)
+summary(data$SatisSup)
 
 # Categorize data as active or supplementary (qualitative or quantitative)
 names(data)
-data.active = subset(data, select = c("IntndPitFull"))    # c(1:8), c(1:3, 5:8)
-data.sup.quali = ""    # data[ , 9:46]
-data.sup.quanti = ""    # data[ , 47:56]
+summary(data)
+data = subset(data, select = -c(LBO, IntndPitFullDes, RDefBefor_Othr, 
+                                RDefBefor_NAAlwysToi, IntndChng_Othr, 
+                                IntndChng_NAAlwysToi, Rec))
+# May want to remove RDefBefor_RivPnd due to low freq
+# Removed Rec due to nearly equal freqs
+# Active data = beliefs, intentions, or behaviors related to sanitation
+indices.active = match(c("AdltUseLat", "ChldUseLat", "InfLatDump", 
+                         "IntndPitFull", "Satis", "SatisSup", 
+                         "RecSup", "RDefBefor_BshFld", 
+                         "RDefBefor_RivPnd", "RDefBefor_NeiToi",
+                         "IntndChng_Shltr", "IntndChng_Shwr",
+                         "IntndChng_HndWsh", "IntndChng_WtrRes",
+                         "IntndChng_2pit"), names(data))
+indices.sup.quali = match(c("Prov", "CGend", "IDPoor", "LivRP", "VillOD", "Yr",
+                            "Mnth"), names(data))
+indices.sup.quanti = 0
 
 ###############################################################################
 # PERFORM MULTIPLE CORRESPONDENCE ANALYSIS 
 ###############################################################################
 # Summarize data
-summary(data.active)
-summary(data.sup.quanti)
-summary(data.sup.quali)
-
-for (i in 1:length(data.active)) {
-  plot(data.active[, i], main = colnames(data.active)[i],
+summary(data[indices.active])
+summary(data[indices.sup.quali])
+summary(data[indices.sup.quanti])
+for (i in 1:length(data)) {
+  plot(data[, i], main = colnames(data)[i],
        ylab = "Count", col = "steelblue")
 }
 
-# Impute data due to missing data (NOT WORKING)
-require(missMDA)
-data(vnf)
-completed = imputeMCA(vnf, ncp = 2)
-res.mca = MCA(vnf)
-res.mca = MCA(vnf,tab.disj=completed$tab.disj)
-
-
 # Perform multiple correspondence analysis
-results = MCA(X = data.active, na.method = "NA")
+results = MCA(X = data, quali.sup = indices.sup.quali,
+              graph = T,
+              na.method = "NA")
+print(results)
+summary(results)
+summary(results, ncp = 3, nbelements = Inf)
+dimdesc(results)
+
+# Generate plots
+# Categories and Individuals
+plot.MCA(results, choix = "ind", title = "Categories and Individuals", cex = 0.7, label = c("var"))
+plot.MCA(results, autoLab = "y", cex = 0.7, selectMod = "cos2 20", select = "cos2 10")
+# Variables
+plot.MCA(results, choix = "var", title = "Variables and Supplementary Variables", autoLab = "no", cex = 0.7)
+# Categories
+plot.MCA(results, invisible = c("ind", "quanti.sup", "quali.sup"), cex = 0.7, title = "Responses/Categories", autoLab = "no")
+plot.MCA(results, invisible = c("ind", "quanti.sup", "quali.sup"), cex = 0.7, title = "Responses/Categories", autoLab = "no", selectMod = "contrib 20")
+plot.MCA(results, invisible = c("ind", "quanti.sup", "quali.sup"), cex = 0.7, title = "Responses/Categories", autoLab = "no", selectMod = "cos2 10")
+
+# Individuals
+plot.MCA(results, invisible = c("var", "quanti.sup", "quali.sup"), cex = 0.7, title = "Individuals")
+plot.MCA(results, invisible = c("var", "quanti.sup", "quali.sup"), cex = 0.7, title = "Individuals", select = "cos2 10")
+plot.MCA(results, invisible = c("var", "quanti.sup", "quali.sup"), cex = 0.7, select = "contrib 20", axes = 3:4)
+# Supplementary Variables
+plot.MCA(results, invisible = c("var", "ind", "quali.sup"), cex = 0.7, autoLab = "n", title = "Quantitative Supplementary Variables")
+plot.MCA(results, invisible = c("var", "ind", "quanti.sup"), cex = 0.7, autoLab = "n", title = "Qualitative Supplementary Variables")
+
+
+
+
+
+
+
+
+
+
+
+plot(results, invisible = c("ind"), cex = 0.7, select = "contrib 20", axes = 3:4)
+plotellipses(results, keepvar = c(1:4))
+
+# Impute data due to missing data (NOT WORKING)
+# require(missMDA)
+# data(vnf)
+# completed = imputeMCA(vnf, ncp = 2)
+# res.mca = MCA(vnf)
+# res.mca = MCA(vnf,tab.disj=completed$tab.disj)
 # imputed = imputeMCA(don = data.active, ncp = 2)
 # results = MCA(X = data.active, 
 #               quali.sup = data.sup.quali,
 #               quanti.sup = data.sup.quanti,
 #               tab.disj = imputed$tab.disj)
 # results = MCA(tea, quanti.sup = 19, quali.sup = c(20:36))
-
-# Print results of multiple correspondence analysis
-print(results)
-
-
 
 # Tea example
 data(tea)
@@ -75,35 +151,3 @@ plot.MCA(res.mca, invisible=c("var","quali.sup"), cex=0.7)
 plot.MCA(res.mca, invisible=c("ind","quali.sup"), cex=0.7)
 plot.MCA(res.mca, invisible=c("ind"))
 plot.MCA(res.mca, invisible=c("ind", "var"))
-
-
-
-# Create temporary vectors and name variables from data
-name = "mca"
-plot_name = name
-
-# Print results from multiple correspondence analysis
-summary(results, ncp = 3, nbelements = Inf)
-dimdesc(results)
-
-# Generate plots and store in variables
-plot.MCA(results, invisible = c("ind", "quanti.sup", "quali.sup"))   # Variables
-plot.MCA(results, invisible = c("var", "quanti.sup", "quali.sup"))   # Individuals
-plot.MCA(results, invisible = c("var", "ind", "quali.sup"), cex = 0.7)
-plot.MCA(results, invisible = c("var", "ind", "quanti.sup"), cex = 0.7)
-plot(results, label = c("var","quali.sup"), cex = 0.7)
-plot(results, label = c("var"), cex = 0.7)
-plot(results, invisible = c("var","quali.sup"), cex = 0.7)
-plot(results, invisible = c("ind","quali.sup"), autoLab = "y", cex = 0.7, title = "Active Categories")
-plot(results, invisible = c("ind","quali.sup"), autoLab = "y", cex = 0.7, title = "Active Categories", selectMod = "contrib 20")
-plot(results, invisible = c("ind","quali.sup"), cex = 0.7, title = "Active Categories")
-plot(results, invisible = c("ind","var"), autoLab = "y", cex = 0.7, title = "Supplementary Categories")
-plot(results, invisible = "ind", autoLab = "y", cex = 0.7, selectMod = "cos2 10")
-plot(results, invisible = "ind", autoLab = "y", cex = 0.7, selectMod = "contrib 20")
-plot(results, invisible = c("var","quali.sup"), autoLab = "y", cex = 0.7, select = "cos2 10")
-plot(results, autoLab = "y", cex = 0.7, selectMod = "cos2 20", select = "cos2 10")
-plot(results, choix = "var", xlim = c(0,0.6), ylim = c(0,0.6))
-plot(results, choix = "var", xlim = c(0,0.6), ylim = c(0,0.6), invisible = c("ind","quali.sup"))
-plot(results, invisible = c("var","quali.sup"), cex = 0.7, select = "contrib 20", axes = 3:4)
-plot(results, invisible = c("ind"), cex = 0.7, select = "contrib 20", axes = 3:4)
-plotellipses(results, keepvar = c(1:4))
