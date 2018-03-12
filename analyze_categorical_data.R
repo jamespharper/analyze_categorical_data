@@ -22,21 +22,21 @@ load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
 # USER INPUT
 ###############################################################################
 # Select test to run; set others equal to 0 to ignore
-Freqs = 0     # Frequency analysis as singles, pairs, or triplets (1, 2, or 3)
-CA = 1        # Correspondence Analysis
+Freqs = 2     # Frequency analysis as singles, pairs, or triplets (1, 2, or 3)
+CA = 0        # Correspondence Analysis
 MCA = 0       # Multiple Correspondence Analysis
 
 # Select file to import based on selected test
 # file_to_import_freqs_ca = paste(getwd(), 
 #                                 "/data/data_latowner_6monthpostconst.xlsx", 
 #                                 sep = "")
-file_to_import_mca = paste(getwd(), 
-                           "/data/data_mca.csv", 
-                           sep = "")
+# file_to_import_mca = paste(getwd(), 
+#                            "/data/data_mca.csv", 
+#                            sep = "")
 
 # Define variables; set equal to 0 to ignore
 var_skip = 0        # Variables to skip during analyses
-var_interest = 71
+var_interest = 34
 # var_interest = c("Prov", "IntndChng_Shltr",
 #                  "IntndChng_Shwr", "IntndChng_HndWsh",
 #                  "IntndChng_WtrRes", "IntndChng_2pit",
