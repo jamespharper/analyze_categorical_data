@@ -102,9 +102,9 @@ for (i in iter) {
               na.action = na.omit)
   
   # Analyze model fit
-  # summary(model)
-  # anova(model, test = "Chisq")
-  # pR2(model)
+  summary(model)
+  anova(model, test = "Chisq")
+  pR2(model)
   
   # Test predictive power of model on testing data
   predict_results = function(model, test, type) {
