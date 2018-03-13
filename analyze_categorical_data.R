@@ -35,13 +35,10 @@ MCA = 0       # Multiple Correspondence Analysis
 #                            sep = "")
 
 # Define variables; set equal to 0 to ignore
+names(data)
 var_skip = 0        # Variables to skip during analyses
-var_interest = 34
-# var_interest = c("Prov", "IntndChng_Shltr",
-#                  "IntndChng_Shwr", "IntndChng_HndWsh",
-#                  "IntndChng_WtrRes", "IntndChng_2pit",
-#                  "IntndChng_Othr", "IntndChng_NAAlwysToi")         # Variable of interest for two/three-way/CA/MCA analyses
-var_stratify = 4          # Stratifiers for two/three-way analysis
+var_interest = 39   # Variable of interest for two/three-way/CA/MCA analyses
+var_stratify = 21          # Stratifiers for two/three-way analysis
 quali_sup = c()      # Qualitative supplementary variables for MCA
 quanti_sup = c()     # Quantitative supplementary variables for MCA
 
