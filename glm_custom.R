@@ -89,14 +89,14 @@ for (i in iter) {
   #        IntndChng_Shwr, IntndChng_HndWsh, IntndChng_WtrRes,
   #        IntndChng_2pit
   # p<.10: IDPoor
-  # p>.10: CGend, LivRP, AdltUseLat, ChldUseLat, InfLatDump, Rec, Yr, Mnth, 
+  # p>.10: CGend, LivRP, AdltUseLat, ChldUseLat, InfLatDump, Rec, Yr, Mnth
+  # Removed because wouldn't be available when predicting FSM intentions: Yr, IntndChng_Pit
   
   # Refine model to include only variables that 1) significantly related to
   # IntndPitFull, adn 2) reduce residual deviance markedly
   model = glm(formula = IntndPitFullDes ~ Prov + IDPoor + VillOD + Satis + 
-                SatisSup + RecSup + Yr + Mnth + RDefBefor_BshFld +
-                IntndChng_Shwr + IntndChng_HndWsh + IntndChng_WtrRes +
-                IntndChng_2pit,
+                SatisSup + RecSup + Mnth + RDefBefor_BshFld +
+                IntndChng_Shwr + IntndChng_Sink + IntndChng_WtrRes,
               data = train,
               family = binomial(link = "logit"),
               na.action = na.omit)
