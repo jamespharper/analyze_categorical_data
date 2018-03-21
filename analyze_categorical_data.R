@@ -16,7 +16,7 @@ source("functions.R")                                # Load custom functions
 load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
                  "ca", "extracat", "iplots", 
                  "FactoMineR", "gplots", "factoextra",
-                 "corrplot", "ggpubr"))
+                 "corrplot", "ggpubr", "ltm"))
 
 ###############################################################################
 # USER INPUT
@@ -37,8 +37,8 @@ MCA = 0       # Multiple Correspondence Analysis
 # Define variables; set equal to 0 to ignore
 names(data)
 var_skip = 0        # Variables to skip during analyses
-var_interest = 39   # Variable of interest for two/three-way/CA/MCA analyses
-var_stratify = 21          # Stratifiers for two/three-way analysis
+var_interest = 38   # Variable of interest for two/three-way/CA/MCA analyses
+var_stratify = 45          # Stratifiers for two/three-way analysis
 quali_sup = c()      # Qualitative supplementary variables for MCA
 quanti_sup = c()     # Quantitative supplementary variables for MCA
 
