@@ -62,10 +62,10 @@ for (i in iter) {
   # [29] "IntndPitFullDes"
   
   # Test individual variables predictive power of IntndPitFullDes
-  # model = glm(formula = IntndPitFullDes ~ RDefBefor_BshFld,
-  #             data = train,
-  #             family = binomial(link = "logit"),
-  #             na.action = na.omit); summary(model); anova(model, test = "Chisq")
+  model = glm(formula = IntndPitFullDes ~ Rain.mm,
+              data = train,
+              family = binomial(link = "logit"),
+              na.action = na.omit); summary(model); anova(model, test = "Chisq")
   # names(train)
   # p<.05: LBO, Prov, IDPoor, InfLatDump, Satis, Rec, SatisSup, RecSup, Yr, 
   #        Mnth, RDefBefor_BshFld, RDefBefor_NeiToi, IntndChng_Shwr, 
@@ -93,7 +93,7 @@ for (i in iter) {
   # Removed because wouldn't be available when predicting FSM intentions: Yr, IntndChng_Pit
   
   # Refine model to include only variables that 1) significantly related to
-  # IntndPitFull, adn 2) reduce residual deviance markedly
+  # IntndPitFull, and 2) reduce residual deviance markedly
   model = glm(formula = IntndPitFullDes ~ Prov + IDPoor + VillOD + Satis + 
                 SatisSup + RecSup + Mnth + RDefBefor_BshFld +
                 IntndChng_Shwr + IntndChng_Sink + IntndChng_WtrRes,
