@@ -35,7 +35,8 @@ MCA = 0       # Multiple Correspondence Analysis
 #                            sep = "")
 
 # Define variables; set equal to 0 to ignore
-names(data)
+names(data); summary(data$Prov)
+subset_by_prov = "Banteay Meanchey"
 var_skip = 0        # Variables to skip during analyses
 var_interest = 38   # Variable of interest for two/three-way/CA/MCA analyses
 var_stratify = 45          # Stratifiers for two/three-way analysis
@@ -53,21 +54,10 @@ if ((Freqs != 0) + (CA != 0) + (MCA != 0) > 1) {
 ###############################################################################
 # IMPORT AND CLEAN DATA
 ###############################################################################
-# Import data
-if (Freqs != 0 || CA != 0) {
-  load(file = "iDE_Oct2017.Rdata")
-} else if (MCA != 0) {
-  data = read.table(file_to_import_mca, header = TRUE, sep = ",")
-  names(data)[1] = "RDefBefrNeiToi"
-
-  # Convert categorical data from characters into factors
-  for (i in 1:length(names(data))) {
-    if (is.character(data[i][[1]])) {
-      data[i][[1]] = as.factor(data[i][[1]])
-    }
-  }
+load(file = "iDE_Oct2017.Rdata")
+if (subset_by_prov != "") {
+  data = subset(data, Prov == bquote(.(subset_by_prov)))
 }
-
 # str(data)
 # summary(data)
 
