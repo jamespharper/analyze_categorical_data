@@ -72,14 +72,34 @@ for (i in iter) {
   # [40] "IntndPitFullEmpSlf"   "IntndPitFullDK"       "IntndPitFullOthr"    
   # [43] "IntndPitFullPay"      "IntndPitFullStop"     "Rain.mm"
   # summary(data)
+  data = subset(data, select = -c(IntndChng_NAAlwysToi, RDefBefor_NAAlwysToi,
+                                  IntndPitFullOthr, IntndPitFullPit,
+                                  IntndChng_Othr, IntndPitFull,
+                                  RDefBefor_Othr, IntndChng_Pit,
+                                  IntndPitFullDK,
+                                  IntndPitFullStop, IntndPitFullPay,
+                                  IntndPitFullEmpSlf, RDefBefor))
   
-  # Test individual variables predictive power of IntndPitFullDes
-  for (i in 1:length(names(data))) {
-    model = glm(formula = IntndPitFullDes ~ paste(as.formula((names(data)[i])),
-                data = train,
+  # Test each individual variable's predictive power of IntndPitFullDes
+  df = data.frame(Var = character(), p = double(), RDevNull = double(), RDev = double())
+  for (i in 2:length(names(data))) {
+    model = glm(formula = paste("IntndPitFullDes ~ ", names(data)[i]),
+                data = data,
                 family = binomial(link = "logit"),
                 na.action = na.omit); summary(model); anova(model, test = "Chisq")
+    results = anova(model, test = "Chisq")
+    p = results$`Pr(>Chi)`[2]
+    rdev.null = results$`Resid. Dev`[1]
+    rdev = results$`Resid. Dev`[2]
+    df = rbind(df, data.frame(Var = names(data)[i], P = p, RDevNull = rdev.null, RDev = rdev))
   }
+  print(unique(data$Prov)[1])
+  df
+  
+  model = glm(formula = IntndPitFullDes ~ Vill,
+              data = data,
+              family = binomial(link = "logit"),
+              na.action = na.omit); summary(model); anova(model, test = "Chisq")
   
   # All Provinces
   # p<.05: LBO, Prov, IDPoor, InfLatDump, Satis, Rec, SatisSup, RecSup, Yr, 
@@ -87,9 +107,11 @@ for (i in iter) {
   #        IntndChng_HndWsh, IntndChng_WtrRes, IntndChng_2pit
   # p>.05: CGend, LivRP, VillOD, AdltUseLat, ChldUseLat, RDefBefor_RivPnd, 
   #        IntndChng_Shltr
+  
   # Banteay Meanchey
-  # p<0.05: Dist, Comm, VillOD, RDefBefor, 
-  # p>0.05: Vill, CGend, IDPoor, IDPoorTyp, LivRP, 
+  # p<0.05: Dist, Comm, Vill, IDPoor, IDPoorTyp, VillOD, FreqNeiToi, 
+  #         IntndChng, ChldUseLat, Satis, SatisSup, Yr, Mnth, YrMnth,
+  #         RDefBefor_BshFld, IntndChng_Sink
   
   
   ################################
@@ -145,15 +167,15 @@ for (i in iter) {
   # [43] "IntndPitFullPay"      "IntndPitFullStop"     "Rain.mm"
   
   # Test model with all variables to predict IntndPitFullDes
-  names(train)
-  model = glm(formula = IntndPitFullDes ~ CGend + IDPoor + LivRP +
-                VillOD + FreqNeiToi + AdltUseLat + ChldUseLat + InfLatDump + Satis + Rec +
-                SatisSup + RecSup + Yr + Mnth + RDefBefor_BshFld +
-                RDefBefor_RivPnd + RDefBefor_NeiToi + IntndChng_Shltr +
-                IntndChng_Shwr + IntndChng_Sink + IntndChng_WtrRes + Rain.mm,
-              data = train,
-              family = binomial(link = "logit"),
-              na.action = na.omit); summary(model); anova(model, test = "Chisq")
+  # names(train)
+  # model = glm(formula = IntndPitFullDes ~ CGend + IDPoor + LivRP +
+  #               VillOD + FreqNeiToi + AdltUseLat + ChldUseLat + InfLatDump + Satis + Rec +
+  #               SatisSup + RecSup + Yr + Mnth + RDefBefor_BshFld +
+  #               RDefBefor_RivPnd + RDefBefor_NeiToi + IntndChng_Shltr +
+  #               IntndChng_Shwr + IntndChng_Sink + IntndChng_WtrRes + Rain.mm,
+  #             data = train,
+  #             family = binomial(link = "logit"),
+  #             na.action = na.omit); summary(model); anova(model, test = "Chisq")
   # Removed due to low interest: LBO
   # p<.05: Prov, VillOD, Satis, SatisSup, RecSup, RDefBefor_BshFld,
   #        IntndChng_Shwr, IntndChng_HndWsh, IntndChng_WtrRes,
@@ -162,15 +184,14 @@ for (i in iter) {
   # p>.10: CGend, LivRP, AdltUseLat, ChldUseLat, InfLatDump, Rec, Yr, Mnth
   # Removed because wouldn't be available when predicting FSM intentions: Yr, IntndChng_Pit
   
+  # BANTEAY MEANCHEY
   # Refine model to include only variables that 1) significantly related to
   # IntndPitFull, and 2) reduce residual deviance markedly
-  # model = glm(formula = IntndPitFullDes ~ Prov + IDPoor + VillOD + Satis + 
-  #               SatisSup + RecSup + Mnth + RDefBefor_BshFld +
-  #               IntndChng_Shwr + IntndChng_Sink + IntndChng_WtrRes +
-  #               Rain.mm,
-  #             data = train,
-  #             family = binomial(link = "logit"),
-  #             na.action = na.omit)
+  model = glm(formula = IntndPitFullDes ~ Dist + Comm + IDPoor + VillOD + 
+                IntndChng + ChldUseLat + Satis + SatisSup + Yr + Mnth + RDefBefor_BshFld + IntndChng_Sink,
+              data = data,
+              family = binomial(link = "logit"),
+              na.action = na.omit); summary(model); anova(model, test = "Chisq"); pR2(model)
   
   # Analyze model fit
   # summary(model)
