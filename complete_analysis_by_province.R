@@ -142,11 +142,11 @@ freqs.2way = function(data, metric1, metric2, prov, return = 0) {
   dev.off()
   closeAllConnections()
   
-  # Return frequencies if user selected
+  # Return results if user selected
   if (return == 1) {return(list(name, freqs, chisq_cramv))}
   
 }
-ca = function(data, metric1, metric2, prov, return = 0) {
+correspondence = function(data, metric1, metric2, prov, return = 0) {
   
   # Create temporary vectors and name variable from data
   A = data[metric1][[1]]
@@ -214,15 +214,115 @@ ca = function(data, metric1, metric2, prov, return = 0) {
                        repel = TRUE)
   
   # Save plots to PDF
+  folder = create_folder(subfolder = prov)
   ggexport(plotlist = list(plot1, plot2, plot3, plot4, plot5, plot6, plot7,
                            plot8, plot9, plot10, plot11, plot12, plot13,
                            plot14, plot15, plot16, plot17, plot18), 
-           filename = paste(getwd(), "/output/", name, ".pdf", sep = ""))
+           filename = paste(folder, "/", name, ".pdf", sep = ""))
   
-  # Return correspondence results if user selected
+  # Return results if user selected
   if (return == 1) {return(list(name, freqs.ca))}
   
 }
+multiple.correspondence = function(data, quali_sup = "", quanti_sup = "",
+                                   return = 0) {
+  
+  # Perform multiple correspondence analysis
+  results = MCA(data, quali.sup = quali_sup, quanti.sup = quanti_sup)
+  
+  # Create file name and plot name variables
+  name = paste("mca", prov, sep = "_")
+  plot_name = name
+  
+  # Start sending text output to text file in folder
+  folder = create_folder(subfolder = prov)
+  file1 = file(paste(folder, "/", name, ".txt", sep = ""))
+  sink(file1, append = TRUE)
+  sink(file1, append = TRUE, type = "message")
+  
+  # Print results from multiple correspondence analysis
+  summary(results, ncp = 3, nbelements = Inf)
+  dimdesc(results)
+  
+  # Stop saving text output to file
+  sink()
+  sink(type = "message")
+  
+  # Generate plots and store in variables
+  plot1 = recordPlot(plot(results, label = c("var","quali.sup"), cex = 0.7))
+  plot2 = recordPlot(plot(results, invisible = c("var","quali.sup"), cex = 0.7))
+  plot3 = recordPlot(plot(results, invisible = c("ind","quali.sup"), autoLab = "y", cex = 0.7, title = "Active Categories"))
+  plot4 = recordPlot(plot(results, invisible = c("ind","quali.sup"), autoLab = "y", cex = 0.7, title = "Active Categories", selectMod = "contrib 20"))
+  plot5 = recordPlot(plot(results, invisible = c("ind","quali.sup"), cex = 0.7, title = "Active Categories"))
+  plot6 = recordPlot(plot(results, invisible = c("ind","var"), autoLab = "y", cex = 0.7, title = "Supplementary Categories"))
+  plot7 = recordPlot(plot(results, invisible = "ind", autoLab = "y", cex = 0.7, selectMod = "cos2 10"))
+  plot8 = recordPlot(plot(results, invisible = "ind", autoLab = "y", cex = 0.7, selectMod = "contrib 20"))
+  plot9 = recordPlot(plot(results, invisible = c("var","quali.sup"), autoLab = "y", cex = 0.7, select = "cos2 10"))
+  plot10 = recordPlot(plot(results, autoLab = "y", cex = 0.7, selectMod = "cos2 20", select = "cos2 10"))
+  plot11 = recordPlot(plot(results, choix = "var", xlim = c(0,0.6), ylim = c(0,0.6)))
+  plot12 = recordPlot(plot(results, choix = "var", xlim = c(0,0.6), ylim = c(0,0.6), invisible = c("ind","quali.sup")))
+  plot13 = recordPlot(plot(results, invisible = c("var","quali.sup"), cex = 0.7, select = "contrib 20", axes = 3:4))
+  plot14 = recordPlot(plot(results, invisible = c("ind"), cex = 0.7, select = "contrib 20", axes = 3:4))
+  plot15 = recordPlot(plotellipses(results, keepvar = c(1:4)))
+  
+  # Save plots to PDF
+  ggexport(plotlist = list(plot1, plot2, plot3, plot4, plot5, plot6, plot7,
+                           plot8, plot9, plot10, plot11, plot12, plot13,
+                           plot14, plot15), 
+           filename = paste(folder, "/", name, ".pdf", sep = ""))
+  
+  # Return results if user selected
+  if (return == 1) {return(list(name, results))}
+  
+}
+genlinmod = function(data, iter = 10) {
+  iter = 1:iter
+  accuracy = rep(0, times = length(iter))
+  len = length(data[,1])
+  for (i in iter) {
+    
+    # Create training (70%) and testing (30%) sets using random sampling
+    indices_all = 1:len
+    indices_train = sort(sample(x = indices_all, size = round(0.7*len, 0), 
+                                replace = F), decreasing = F)
+    indices_test = indices_all[!(indices_all %in% indices_train)]
+    # data.frame(indices_train[1:100], indices_test[1:100])
+    train = data[indices_train,]; test = data[indices_test,]
+    print(summary(train)); print(summary(test))
+    
+    # Run glm model
+    model = glm(formula = IntndPitFullDes ~ Dist + CGend + IDPoor + VillOD + 
+                  LivRP + VillOD + FreqNeiToi + AdltUseLat + ChldUseLat + 
+                  InfLatDump + Satis + Rec + SatisSup + RecSup + Yr + Mnth +
+                  RDefBefor_BshFld + IntndChngShltr + IntndChng_Shwr +
+                  IntndChng_Sink + IntndChng_WtrRes + Rain.mm,
+                data = train,
+                family = binomial(link = "logit"),
+                na.action = na.omit)
+    
+    # Test predictive power of model on test data
+    predict_results = function(model, test, type) {
+      fitted.results = predict(model, newdata = test, type = type)
+      return(fitted.results)
+    }
+    fitted.results = try(predict_results(model, test, "response"), silent = T)
+    if (inherits(fitted.results, "try-error")) {
+      next
+    }
+    fitted.results = ifelse(fitted.results > 0.5, 1, 0)
+    # data.frame(test$IntndPitFullDes[!is.na(fitted.results)], 
+    #            fitted.results[!is.na(fitted.results)])
+    misclass.error = mean(fitted.results[!is.na(fitted.results)] != 
+                            test$IntndPitFullDes[!is.na(fitted.results)])
+    accuracy[i] = 1 - misclass.error
+  }
+  head(accuracy)
+  # hist(accuracy)
+  print(mean(accuracy[accuracy != 0]))
+}
+
+
+
 
 ###############################################################################
 # ANALYZE DATA BY PROVINCE
@@ -249,7 +349,7 @@ for (prov in provinces) {
   summary(sub)
   
   # Run 1-way frequency analysis on selected variable
-  names(sub)
+  # names(sub)
   var1 = c(2:length(sub))
   for (num in var1) {
     print(num)
@@ -265,9 +365,17 @@ for (prov in provinces) {
     print(paste(pairs[num,1], "_", pairs[num,2]))
     freqs.2way(data = sub, metric1 = pairs[num,1], metric2 = pairs[num,2], 
                prov = prov)
-    ca(data = sub, metric1 = pairs[num,1], metric2 = pairs[num,2], 
-               prov = prov)
+    # correspondence(data = sub, metric1 = pairs[num,1], metric2 = pairs[num,2], 
+    #    prov = prov)     # NOT WORKING
   }
+  
+  # Run multiple correspondence analysis
+  # multiple.correspondence(data = sub[2:length(sub)], 
+  #                         quali_sup = c(3:4, 7, 10, 12, 13, 18),
+  #                         quanti_sup = c())   # NOT WORKING
+  
+  # Run generalized linear model
+  genlinmod(data = sub, iter = 10)
 
 }
 
