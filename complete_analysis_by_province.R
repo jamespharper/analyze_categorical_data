@@ -1,0 +1,280 @@
+# Analysis of Surveys of Rural Cambodian Latrine Owners
+# Written by James Harper, PE, ENV SP of the University of Colorado Boulder
+# Started October 1, 2017
+# Last updated March 26, 2018
+
+###############################################################################
+# INITIALIZE AND LOAD DATA
+###############################################################################
+rm(list = ls())                                      # Clear global environment
+cat("\014")                                          # Clear console window
+file.remove(dir(paste(getwd(),"/output/", sep = ""), # Clear output folder
+                full.names = TRUE))    
+source("functions.R")                                # Load custom functions
+load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
+                 "ca", "extracat", "iplots", 
+                 "FactoMineR", "gplots", "factoextra",
+                 "corrplot", "ggpubr", "rgl", "missMDA",
+                 "pscl", "ltm", "Amelia"))
+load(file = "iDE_Oct2017.Rdata")
+provinces = unique(data$Prov)
+
+###############################################################################
+# DEFINE FUNCTIONS
+###############################################################################
+freqs.1way = function(data, metric1, prov, return = 0) {
+  
+  # Create temporary data vector and name variable
+  if (is.numeric(metric1)) {
+    A = data[metric1][[1]]
+    name = paste("freqs_1way", prov, names(data)[[metric1]], sep = "_")
+    title = paste("A = ", names(data)[[metric1]], sep = "")
+  }
+  else if (is.character(metric1)) {
+    A = unlist(data[metric1])
+    name = paste("freqs_1way", prov, metric1, sep = "_")
+    title = paste("A = ", metric1, sep = "")
+  }
+  else {stop("ERROR: Variable not found in data.")}
+  
+  # Perform categorical analyses and store results for printing below
+  freqs = table(A)
+  freqs_prop = prop.table(freqs)
+  freqs_prop_df = data.frame(Response = names(freqs_prop), 
+                             Proportion = as.numeric(freqs_prop))
+  freqs = freqs[order(-freqs)]
+  freqs_prop_df = freqs_prop_df[order(-freqs_prop_df$Proportion),]
+  
+  # Start sending text output to text file
+  folder = create_folder(subfolder = prov)
+  file1 = file(paste(folder, "/", name, ".txt", sep = ""))
+  sink(file1, append = TRUE)
+  sink(file1, append = TRUE, type = "message")
+  
+  # Print title and results to text file
+  print(title)
+  print(summary(freqs))
+  print(freqs)
+  print(freqs_prop_df)
+  
+  # Stop sending text output to file
+  sink()
+  sink(type = "message")
+  closeAllConnections()
+  
+  # Return results if selected
+  if (return == 1) {return(list(freqs, freqs_prop_df))}
+  
+}
+freqs.2way = function(data, metric1, metric2, prov, return = 0) {
+  
+  # Create temporary data vector and name variable
+  if (is.numeric(metric1) && is.numeric(metric2)) {
+    A = data[metric1][[1]]
+    B = data[metric2][[1]]
+    name_metric1 = names(data)[[metric1]]
+    name_metric2 = names(data)[[metric2]]
+  }
+  else if (is.character(metric1) && is.character(metric2)) {
+    A = unlist(data[metric1])
+    B = unlist(data[metric2])
+    name_metric1 = metric1
+    name_metric2 = metric2
+  }
+  else {stop("ERROR: Variable not found in data, and metrics not same type.")}
+  
+  # Start sending text output to dump file
+  file1 = file(paste(getwd(),"/Output/dump.txt", sep = ""))
+  sink(file1, append = TRUE)
+  sink(file1, append = TRUE, type = "message")
+  
+  # Perform categorical analyses
+  freqs = table(A, B)
+  # print(fisher.test(freqs))            # Fisher Exact test for small n
+  chisq_cramv = assocstats(freqs)        # Chi squared test and Cramer's v
+  
+  # Stop sending text output to dump file
+  sink()
+  sink(type = "message")
+  
+  # Create file name and plot name variables
+  p_value = round(chisq_cramv$chisq_tests[2,3], digits = 3)
+  chisqd = round(chisq_cramv$chisq_tests[2,1], digits = 3)
+  cramer_v = round(chisq_cramv$cramer, digits = 3)
+  name = paste("freqs_2way_", prov, "_", p_value, "_", chisqd, "_", cramer_v, "_",
+               name_metric1, "_", name_metric2, sep = "")
+  plot_name = paste(prov, "_", name_metric1, "_", name_metric2, "_", p_value, "_",
+                    chisqd, "_", cramer_v, sep = "")
+  
+  # Start sending text output to text file
+  folder = create_folder(subfolder = prov)
+  file1 = file(paste(folder, "/", name, ".txt", sep = ""))
+  sink(file1, append = TRUE)
+  sink(file1, append = TRUE, type = "message")
+  
+  # Print title and results
+  print(paste("A = ", name_metric1, sep = ""))
+  print(paste("B = ", name_metric2, sep = ""))
+  print(CrossTable(A, B))
+  # print(ftable(freqs))
+  print(summary(freqs))
+  print(chisq_cramv)
+  
+  # Stop sending text output to file
+  sink()
+  sink(type = "message")
+  
+  # Start saving plot to PDF in a given folder based on p_values
+  pdf(paste(folder, "/", name, ".pdf", sep = ""))
+  
+  # Generate categorical analysis plots
+  if (length(freqs[,1]) < 50) {
+    mosaic(freqs, shade = TRUE, legend = TRUE, main = plot_name)
+    balloonplot(freqs, main = name)
+  } else {
+    mosaic(freqs, shade = TRUE, legend = TRUE, main = plot_name)
+    balloonplot(freqs, main = name)
+    # Stacked bar plot with legend
+    # barplot(table(B,A), main=name, legend = colnames(freqs))
+  }
+  
+  # Stop sending plot output to file
+  dev.off()
+  closeAllConnections()
+  
+  # Return frequencies if user selected
+  if (return == 1) {return(list(name, freqs, chisq_cramv))}
+  
+}
+ca = function(data, metric1, metric2, prov, return = 0) {
+  
+  # Create temporary vectors and name variable from data
+  A = data[metric1][[1]]
+  B = data[metric2][[1]]
+  
+  # Create file name and plot name variables
+  name = paste("ca_", prov, "_", names(data)[[metric1]], "_", 
+               names(data)[[metric2]], sep = "")
+  plot_name = paste(prov, "_", names(data)[[metric1]], "_",
+                    names(data)[[metric2]], sep = "")
+  
+  # Start sending text output to text file in folder
+  file1 = file(paste(getwd(), "/output/", name, ".txt", sep = ""))
+  sink(file1, append = TRUE)
+  sink(file1, append = TRUE, type = "message")
+  
+  # Add title to text file
+  print(paste("A = ", names(data)[[metric1]], sep = ""))
+  print(paste("B = ", names(data)[[metric2]], sep = ""))
+  
+  # Perform correspondence analyses
+  CrossTable(A, B)
+  freqs = table(A, B)
+  print(freqs)
+  print(prop.table(freqs, 1))
+  print(prop.table(freqs, 2))
+  freqs.ca = ca(freqs)
+  print(freqs.ca)
+  print(summary(freqs.ca))
+  
+  # Stop saving text output to file
+  sink()
+  sink(type = "message")
+  
+  # Generate plots and store in variables
+  plot1 = fviz_ca_biplot(freqs.ca, map = "symbiplot", 
+                         arrow = c(TRUE, TRUE), repel = TRUE)
+  plot2 = fviz_screeplot(freqs.ca, addlabels = TRUE, 
+                         ylim = c(0, 50))
+  row = get_ca_row(freqs.ca)
+  plot3 = fviz_ca_row(freqs.ca, col.row = "cos2",
+                      gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), repel = TRUE)
+  plot4 = corrplot(row$cos2, is.corr = FALSE)
+  plot5 = fviz_cos2(freqs.ca, choice = "row", axes = 1:2)
+  plot6 = corrplot(row$contrib, is.corr = FALSE)    
+  plot7 = fviz_contrib(freqs.ca, choice = "row", axes = 1, top = 10)
+  plot8 = fviz_contrib(freqs.ca, choice = "row", axes = 2, top = 10)
+  plot9 = fviz_contrib(freqs.ca, choice = "row", axes = 1:2, top = 10)
+  plot10 = fviz_ca_row(freqs.ca, col.row = "contrib",
+                       gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+                       repel = TRUE)
+  
+  col = get_ca_col(freqs.ca)
+  plot11 = fviz_ca_col(freqs.ca, col.col = "cos2", 
+                       gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+                       repel = TRUE)
+  plot12 = corrplot(col$cos2, is.corr = FALSE)
+  plot13 = fviz_cos2(freqs.ca, choice = "col", axes = 1:2)
+  plot14 = corrplot(col$contrib, is.corr = FALSE)
+  plot15 = fviz_contrib(freqs.ca, choice = "col", axes = 1, top = 10)
+  plot16 = fviz_contrib(freqs.ca, choice = "col", axes = 2, top = 10)
+  plot17 = fviz_contrib(freqs.ca, choice = "col", axes = 1:2, top = 10)
+  plot18 = fviz_ca_col(freqs.ca, col.row = "contrib",
+                       gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+                       repel = TRUE)
+  
+  # Save plots to PDF
+  ggexport(plotlist = list(plot1, plot2, plot3, plot4, plot5, plot6, plot7,
+                           plot8, plot9, plot10, plot11, plot12, plot13,
+                           plot14, plot15, plot16, plot17, plot18), 
+           filename = paste(getwd(), "/output/", name, ".pdf", sep = ""))
+  
+  # Return correspondence results if user selected
+  if (return == 1) {return(list(name, freqs.ca))}
+  
+}
+
+###############################################################################
+# ANALYZE DATA BY PROVINCE
+###############################################################################
+# Loop through all provinces
+for (prov in provinces) {
+  print(prov)
+  
+  # Subset data for this province only
+  sub = subset(data, Prov == paste(prov))
+  # print(summary(sub$Prov))
+  # print(summary(sub))
+  sub = droplevels(sub)
+  
+  # Count and visualize NAs
+  summary(sub)
+  sapply(sub, function(x) sum(is.na(x)))
+  missmap(sub, main = "Missing Values in Variables", legend = F)
+  
+  # Remove rows missing IntndPitFull
+  sub = subset(sub, !is.na(IntndPitFull))
+  sapply(sub, function(x) sum(is.na(x)))
+  missmap(sub[1:45], main = "Missing Values in Variables", legend = F)
+  summary(sub)
+  
+  # Run 1-way frequency analysis on selected variable
+  names(sub)
+  var1 = c(2:length(sub))
+  for (num in var1) {
+    print(num)
+    freqs.1way(data = sub, metric1 = num, prov = prov)
+  }
+  
+  # Run 2-way frequency and correspondence analyses on selected variable pairs
+  names(sub)
+  var1 = c(17, 38:44)
+  var2 = c(2, 5, 6, 23, 24)
+  pairs = expand.grid(var1, var2)
+  for (num in 1:length(pairs[,1])) {
+    print(paste(pairs[num,1], "_", pairs[num,2]))
+    freqs.2way(data = sub, metric1 = pairs[num,1], metric2 = pairs[num,2], 
+               prov = prov)
+    ca(data = sub, metric1 = pairs[num,1], metric2 = pairs[num,2], 
+               prov = prov)
+  }
+
+}
+
+##########################################################################
+# CLEAN UP
+##########################################################################
+sink()
+dev.off()
+closeAllConnections()
+file.remove(paste(getwd(),"/Output/dump.txt", sep = ""))
