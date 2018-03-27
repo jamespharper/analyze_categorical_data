@@ -1,0 +1,322 @@
+###############################################################################
+# DEFINE FUNCTIONS
+###############################################################################
+freqs.1way = function(data, metric1, prov, return = 0) {
+  
+  # Create temporary data vector and name variable
+  if (is.numeric(metric1)) {
+    A = data[metric1][[1]]
+    name = paste("freqs_1way", prov, names(data)[[metric1]], sep = "_")
+    title = paste("A = ", names(data)[[metric1]], sep = "")
+  }
+  else if (is.character(metric1)) {
+    A = unlist(data[metric1])
+    name = paste("freqs_1way", prov, metric1, sep = "_")
+    title = paste("A = ", metric1, sep = "")
+  }
+  else {stop("ERROR: Variable not found in data.")}
+  
+  # Perform categorical analyses and store results for printing below
+  freqs = table(A)
+  freqs_prop = prop.table(freqs)
+  freqs_prop_df = data.frame(Response = names(freqs_prop),
+                             Proportion = as.numeric(freqs_prop))
+  freqs = freqs[order(-freqs)]
+  freqs_prop_df = freqs_prop_df[order(-freqs_prop_df$Proportion),]
+  
+  # Start sending text output to text file
+  folder = create_folder(subfolder = prov)
+  file1 = file(paste(folder, "/", name, ".txt", sep = ""))
+  sink(file1, append = TRUE)
+  sink(file1, append = TRUE, type = "message")
+  
+  # Print title and results to text file
+  print(title)
+  print(summary(freqs))
+  print(freqs)
+  print(freqs_prop_df)
+  
+  # Stop sending text output to file
+  sink()
+  sink(type = "message")
+  closeAllConnections()
+  
+  # Return results if selected
+  if (return == 1) {return(list(freqs, freqs_prop_df))}
+  
+}
+
+freqs.2way = function(data, metric1, metric2, prov, return = 0) {
+  
+  # Create temporary data vector and name variable
+  if (is.numeric(metric1) && is.numeric(metric2)) {
+    A = data[metric1][[1]]
+    B = data[metric2][[1]]
+    name_metric1 = names(data)[[metric1]]
+    name_metric2 = names(data)[[metric2]]
+  }
+  else if (is.character(metric1) && is.character(metric2)) {
+    A = unlist(data[metric1])
+    B = unlist(data[metric2])
+    name_metric1 = metric1
+    name_metric2 = metric2
+  }
+  else {stop("ERROR: Variable not found in data, and metrics not same type.")}
+  
+  # Start sending text output to dump file
+  file1 = file(paste(getwd(),"/Output/dump.txt", sep = ""))
+  sink(file1, append = TRUE)
+  sink(file1, append = TRUE, type = "message")
+  
+  # Perform categorical analyses
+  freqs = table(A, B)
+  # print(fisher.test(freqs))            # Fisher Exact test for small n
+  chisq_cramv = assocstats(freqs)        # Chi squared test and Cramer's v
+  
+  # Stop sending text output to dump file
+  sink()
+  sink(type = "message")
+  
+  # Create file name and plot name variables
+  p_value = round(chisq_cramv$chisq_tests[2,3], digits = 3)
+  chisqd = round(chisq_cramv$chisq_tests[2,1], digits = 3)
+  cramer_v = round(chisq_cramv$cramer, digits = 3)
+  name = paste("freqs_2way_", prov, "_", p_value, "_", chisqd, "_", cramer_v, "_",
+               name_metric1, "_", name_metric2, sep = "")
+  plot_name = paste(prov, "_", name_metric1, "_", name_metric2, "_", p_value, "_",
+                    chisqd, "_", cramer_v, sep = "")
+  
+  # Start sending text output to text file
+  folder = create_folder(subfolder = prov)
+  file1 = file(paste(folder, "/", name, ".txt", sep = ""))
+  sink(file1, append = TRUE)
+  sink(file1, append = TRUE, type = "message")
+  
+  # Print title and results
+  print(paste("A = ", name_metric1, sep = ""))
+  print(paste("B = ", name_metric2, sep = ""))
+  print(CrossTable(A, B))
+  # print(ftable(freqs))
+  print(summary(freqs))
+  print(chisq_cramv)
+  
+  # Stop sending text output to file
+  sink()
+  sink(type = "message")
+  
+  # Start saving plot to PDF in a given folder based on p_values
+  pdf(paste(folder, "/", name, ".pdf", sep = ""))
+  
+  # Generate categorical analysis plots
+  if (length(freqs[,1]) < 50) {
+    mosaic(freqs, shade = TRUE, legend = TRUE, main = plot_name)
+    balloonplot(freqs, main = name)
+  } else {
+    mosaic(freqs, shade = TRUE, legend = TRUE, main = plot_name)
+    balloonplot(freqs, main = name)
+    # Stacked bar plot with legend
+    # barplot(table(B,A), main=name, legend = colnames(freqs))
+  }
+  
+  # Stop sending plot output to file
+  dev.off()
+  closeAllConnections()
+  
+  # Return results if user selected
+  if (return == 1) {return(list(name, freqs, chisq_cramv))}
+  
+}
+
+correspondence = function(data, metric1, metric2, prov, return = 0) {
+  
+  # Create temporary vectors and name variable from data
+  A = data[metric1][[1]]
+  B = data[metric2][[1]]
+  
+  # Create file name and plot name variables
+  name = paste("ca_", prov, "_", names(data)[[metric1]], "_",
+               names(data)[[metric2]], sep = "")
+  plot_name = paste(prov, "_", names(data)[[metric1]], "_",
+                    names(data)[[metric2]], sep = "")
+  
+  # Start sending text output to text file in folder
+  file1 = file(paste(getwd(), "/output/", name, ".txt", sep = ""))
+  sink(file1, append = TRUE)
+  sink(file1, append = TRUE, type = "message")
+  
+  # Add title to text file
+  print(paste("A = ", names(data)[[metric1]], sep = ""))
+  print(paste("B = ", names(data)[[metric2]], sep = ""))
+  
+  # Perform correspondence analyses
+  CrossTable(A, B)
+  freqs = table(A, B)
+  print(freqs)
+  print(prop.table(freqs, 1))
+  print(prop.table(freqs, 2))
+  freqs.ca = ca(freqs)
+  print(freqs.ca)
+  print(summary(freqs.ca))
+  
+  # Stop saving text output to file
+  sink()
+  sink(type = "message")
+  
+  # Generate plots and store in variables
+  plot1 = fviz_ca_biplot(freqs.ca, map = "symbiplot",
+                         arrow = c(TRUE, TRUE), repel = TRUE)
+  plot2 = fviz_screeplot(freqs.ca, addlabels = TRUE,
+                         ylim = c(0, 50))
+  row = get_ca_row(freqs.ca)
+  plot3 = fviz_ca_row(freqs.ca, col.row = "cos2",
+                      gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), repel = TRUE)
+  plot4 = corrplot(row$cos2, is.corr = FALSE)
+  plot5 = fviz_cos2(freqs.ca, choice = "row", axes = 1:2)
+  plot6 = corrplot(row$contrib, is.corr = FALSE)
+  plot7 = fviz_contrib(freqs.ca, choice = "row", axes = 1, top = 10)
+  plot8 = fviz_contrib(freqs.ca, choice = "row", axes = 2, top = 10)
+  plot9 = fviz_contrib(freqs.ca, choice = "row", axes = 1:2, top = 10)
+  plot10 = fviz_ca_row(freqs.ca, col.row = "contrib",
+                       gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+                       repel = TRUE)
+  
+  col = get_ca_col(freqs.ca)
+  plot11 = fviz_ca_col(freqs.ca, col.col = "cos2",
+                       gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+                       repel = TRUE)
+  plot12 = corrplot(col$cos2, is.corr = FALSE)
+  plot13 = fviz_cos2(freqs.ca, choice = "col", axes = 1:2)
+  plot14 = corrplot(col$contrib, is.corr = FALSE)
+  plot15 = fviz_contrib(freqs.ca, choice = "col", axes = 1, top = 10)
+  plot16 = fviz_contrib(freqs.ca, choice = "col", axes = 2, top = 10)
+  plot17 = fviz_contrib(freqs.ca, choice = "col", axes = 1:2, top = 10)
+  plot18 = fviz_ca_col(freqs.ca, col.row = "contrib",
+                       gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+                       repel = TRUE)
+  
+  # Save plots to PDF
+  folder = create_folder(subfolder = prov)
+  ggexport(plotlist = list(plot1, plot2, plot3, plot4, plot5, plot6, plot7,
+                           plot8, plot9, plot10, plot11, plot12, plot13,
+                           plot14, plot15, plot16, plot17, plot18),
+           filename = paste(folder, "/", name, ".pdf", sep = ""))
+  
+  # Return results if user selected
+  if (return == 1) {return(list(name, freqs.ca))}
+  
+}
+
+multiple.correspondence = function(data, quali_sup = "", quanti_sup = "",
+                                   return = 0) {
+  
+  # Perform multiple correspondence analysis
+  results = MCA(data, quali.sup = quali_sup, quanti.sup = quanti_sup)
+  
+  # Create file name and plot name variables
+  name = paste("mca", prov, sep = "_")
+  plot_name = name
+  
+  # Start sending text output to text file in folder
+  folder = create_folder(subfolder = prov)
+  file1 = file(paste(folder, "/", name, ".txt", sep = ""))
+  sink(file1, append = TRUE)
+  sink(file1, append = TRUE, type = "message")
+  
+  # Print results from multiple correspondence analysis
+  summary(results, ncp = 3, nbelements = Inf)
+  dimdesc(results)
+  
+  # Stop saving text output to file
+  sink()
+  sink(type = "message")
+  
+  # Generate plots and store in variables
+  plot1 = recordPlot(plot(results, label = c("var","quali.sup"), cex = 0.7))
+  plot2 = recordPlot(plot(results, invisible = c("var","quali.sup"), cex = 0.7))
+  plot3 = recordPlot(plot(results, invisible = c("ind","quali.sup"), autoLab = "y", cex = 0.7, title = "Active Categories"))
+  plot4 = recordPlot(plot(results, invisible = c("ind","quali.sup"), autoLab = "y", cex = 0.7, title = "Active Categories", selectMod = "contrib 20"))
+  plot5 = recordPlot(plot(results, invisible = c("ind","quali.sup"), cex = 0.7, title = "Active Categories"))
+  plot6 = recordPlot(plot(results, invisible = c("ind","var"), autoLab = "y", cex = 0.7, title = "Supplementary Categories"))
+  plot7 = recordPlot(plot(results, invisible = "ind", autoLab = "y", cex = 0.7, selectMod = "cos2 10"))
+  plot8 = recordPlot(plot(results, invisible = "ind", autoLab = "y", cex = 0.7, selectMod = "contrib 20"))
+  plot9 = recordPlot(plot(results, invisible = c("var","quali.sup"), autoLab = "y", cex = 0.7, select = "cos2 10"))
+  plot10 = recordPlot(plot(results, autoLab = "y", cex = 0.7, selectMod = "cos2 20", select = "cos2 10"))
+  plot11 = recordPlot(plot(results, choix = "var", xlim = c(0,0.6), ylim = c(0,0.6)))
+  plot12 = recordPlot(plot(results, choix = "var", xlim = c(0,0.6), ylim = c(0,0.6), invisible = c("ind","quali.sup")))
+  plot13 = recordPlot(plot(results, invisible = c("var","quali.sup"), cex = 0.7, select = "contrib 20", axes = 3:4))
+  plot14 = recordPlot(plot(results, invisible = c("ind"), cex = 0.7, select = "contrib 20", axes = 3:4))
+  plot15 = recordPlot(plotellipses(results, keepvar = c(1:4)))
+  
+  # Save plots to PDF
+  ggexport(plotlist = list(plot1, plot2, plot3, plot4, plot5, plot6, plot7,
+                           plot8, plot9, plot10, plot11, plot12, plot13,
+                           plot14, plot15),
+           filename = paste(folder, "/", name, ".pdf", sep = ""))
+  
+  # Return results if user selected
+  if (return == 1) {return(list(name, results))}
+  
+}
+
+genlinmod = function(data, iter = 1, return = 0) {
+  iter = 1:iter
+  accuracy = rep(0, times = length(iter))
+  len = length(data[,1])
+  for (i in iter) {
+    
+    # Create training (70%) and testing (30%) sets using random sampling
+    indices_all = 1:len
+    indices_train = sort(sample(x = indices_all, size = round(0.7*len, 0), 
+                                replace = F), decreasing = F)
+    indices_test = indices_all[!(indices_all %in% indices_train)]
+    # data.frame(indices_train[1:100], indices_test[1:100])
+    train = data[indices_train,]; test = data[indices_test,]
+    # print(summary(train)); print(summary(test))
+    
+    # Run glm model
+    model = glm(formula = IntndPitFullDes ~ Dist + CGend + IDPoor + VillOD + 
+                  LivRP + VillOD + FreqNeiToi + AdltUseLat + ChldUseLat + 
+                  InfLatDump + Satis + Rec + SatisSup + RecSup + Yr + Mnth +
+                  RDefBefor_BshFld + IntndChng_Shltr + IntndChng_Shwr +
+                  IntndChng_Sink + IntndChng_WtrRes + Rain.mm,
+                data = train,
+                family = binomial(link = "logit"),
+                na.action = na.omit)
+    
+    # Test predictive power of model on test data
+    fitted.results = try(predict(model = model, newdata = test, 
+                                 type = "response"), silent = T)
+    if (inherits(fitted.results, "try-error")) {
+      next
+    }
+    fitted.results = ifelse(fitted.results > 0.5, 1, 0)
+    # data.frame(test$IntndPitFullDes[!is.na(fitted.results)], 
+    #            fitted.results[!is.na(fitted.results)])
+    misclass.error = mean(fitted.results[!is.na(fitted.results)] != 
+                            test$IntndPitFullDes[!is.na(fitted.results)])
+    accuracy[i] = 1 - misclass.error
+    
+    # Analyze model fit
+    if (iter == 1) {
+      print(summary(model))
+      print(anova(model, test = "Chisq"))
+      print(pR2(model))
+    }
+    
+    # Calculate AUC and plot ROC
+    pr = prediction(fitted.results, test$IntndPitFullDes)
+    prf = performance(pr, measure = "tpr", x.measure = "fpr")
+    plot(prf)
+    auc = performance(pr, measure = "auc")
+    auc = auc@y.values[[1]]
+    print(auc)
+    
+  }
+  head(accuracy)
+  # hist(accuracy)
+  print(mean(accuracy[accuracy != 0]))
+  
+  # Return correspondence results if user selected
+  if (return == 1) {return(list(accuracy))}
+  
+}
