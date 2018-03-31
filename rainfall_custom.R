@@ -1,4 +1,4 @@
-# Frequency Analysis of Surveys of Rural Cambodian Latrine Owners
+# Rainfall of Cambodia
 # Written by James Harper, PE, ENV SP of the University of Colorado Boulder
 # Started February 24, 2018
 # Last updated February 24, 2018
