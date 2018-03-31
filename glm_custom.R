@@ -18,7 +18,7 @@ load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
 # Load data file
 load(file = "iDE_Oct2017.RData");
 names(data)
-# summary(data$Prov)
+summary(data$Prov)
 # data = subset(data, Prov == "Banteay Meanchey")
 
 ###############################################################################
