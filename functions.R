@@ -651,75 +651,72 @@ multiple.correspondence = function(data, quali_sup = "", quanti_sup = "",
   if (return == 1) {return(list(name, results))}
   
 }
-genlinmod = function(data, iter = 1, return = 0) {
+genlinmod = function(data, formula, iter = 1, perc_train = 0.8, return = 0) {
   iter = 1:iter
   accuracy = rep(0, times = length(iter))
   len = length(data[,1])
-  # for (i in iter) {
+  for (i in iter) {
   
-  # Create training (50%) and testing (50%) sets using random sampling
-  indices_all = 1:len
-  continue = 0
-  while (continue == 0) {
-    indices_train = sort(sample(x = indices_all, size = round(0.95*len, 0),
-                                replace = F), decreasing = F)
-    indices_test = indices_all[!(indices_all %in% indices_train)]
-    # data.frame(indices_train[1:100], indices_test[1:100])
-    train = data[indices_train,]; test = data[indices_test,]
-    # print(summary(train)); print(summary(test))
-    
-    # Check if each variable in training and testing sets has two factors
-    continue = 1
-    for (var in 1:(length(data) - 1)) {
-      if (var == 33 | var == 41 | var == 42 | var == 43 ) {next}
-      if (nlevels(train[,var]) < 2) { print(paste("Train", var)); continue = 0 }
-      if (nlevels(test[,var]) < 2) { print(paste("Test", var)); continue = 0 }
+    # Create training and testing sets using random sampling
+    indices_all = 1:len
+    continue = 0
+    while (continue == 0) {
+      indices_train = sort(sample(x = indices_all, size = round(perc_train*len, 0),
+                                  replace = F), decreasing = F)
+      indices_test = indices_all[!(indices_all %in% indices_train)]
+      # data.frame(indices_train[1:100], indices_test[1:100])
+      train = data[indices_train,]; test = data[indices_test,]
+      # print(summary(train)); print(summary(test))
+      
+      # Check if each variable in training and testing sets has two factors
+      continue = 1
+      for (var in 1:(length(data) - 1)) {
+        if (var == 33 | var == 41 | var == 42 | var == 43 ) {next}
+        if (nlevels(train[,var]) < 2) { print(paste("Train", var)); continue = 0 }
+        if (nlevels(test[,var]) < 2) { print(paste("Test", var)); continue = 0 }
+      }
     }
+    
+    # Run glm model
+    model = glm(formula = formula,
+                data = train,
+                family = binomial(link = "logit"),
+                na.action = na.omit)
+    
+    # Analyze model fit
+    if (length(iter) == 1) {
+      print(summary(model))
+      print(anova(model, test = "Chisq"))
+      print(pR2(model))
+    }
+    
+    # Test predictive power of model on test data
+    fitted.results = try(predict(object = model, newdata = test,
+                                 type = "response"), silent = T)
+    if (inherits(fitted.results, "try-error")) {
+      next
+    }
+    fitted.results = ifelse(fitted.results > 0.5, 1, 0)
+    # data.frame(test$IntndPitFullDes[!is.na(fitted.results)],
+    #            fitted.results[!is.na(fitted.results)])
+    misclass.error = mean(fitted.results[!is.na(fitted.results)] !=
+                            test$IntndPitFullDes[!is.na(fitted.results)])
+    accuracy[i] = 1 - misclass.error
+    
+    # Calculate AUC and plot ROC
+    if (length(iter) == 1) {
+      pr = prediction(fitted.results, test$IntndPitFullDes)
+      prf = performance(pr, measure = "tpr", x.measure = "fpr")
+      plot(prf)
+      auc = performance(pr, measure = "auc")
+      auc = auc@y.values[[1]]
+      print(auc)
+    }
+  
   }
-  
-  # Run glm model
-  model = glm(formula = IntndPitFullDes ~ Prov + CGend + IDPoor + LivRP + 
-                VillOD + FreqNeiToi + 
-                Satis + Rec + SatisSup + RecSup + Yr + Mnth +
-                RDefBefor_BshFld + Rain.mm,
-              data = train,
-              family = binomial(link = "logit"),
-              na.action = na.omit)
-  # Removed due to low freqs: RDefBefor_NeiToi, RDefBefor_RivPnd
-  # Removed due to low info: AdltUseLat, ChldUseLat, InfLatDump
-  
-  # Analyze model fit
-  # if (iter == 1) {
-  # print(summary(model))
-  print(anova(model, test = "Chisq"))
-  print(pR2(model))
-  # }
-  
-  # Test predictive power of model on test data
-  # fitted.results = try(predict(object = model, newdata = test,
-  #                              type = "response"), silent = T)
-  # if (inherits(fitted.results, "try-error")) {
-  #   next
-  # }
-  # fitted.results = ifelse(fitted.results > 0.5, 1, 0)
-  # # data.frame(test$IntndPitFullDes[!is.na(fitted.results)],
-  # #            fitted.results[!is.na(fitted.results)])
-  # misclass.error = mean(fitted.results[!is.na(fitted.results)] !=
-  #                         test$IntndPitFullDes[!is.na(fitted.results)])
-  # accuracy[i] = 1 - misclass.error
-  
-  # Calculate AUC and plot ROC
-  # pr = prediction(fitted.results, test$IntndPitFullDes)
-  # prf = performance(pr, measure = "tpr", x.measure = "fpr")
-  # plot(prf)
-  # auc = performance(pr, measure = "auc")
-  # auc = auc@y.values[[1]]
-  # print(auc)
-  
-  # }
-  # head(accuracy)
-  # # hist(accuracy)
-  # print(mean(accuracy[accuracy != 0]))
+  print(accuracy)
+  hist(accuracy)
+  print(mean(accuracy[accuracy != 0]))
   
   # Return correspondence results if user selected
   if (return == 1) {return(list(accuracy))}
