@@ -652,7 +652,6 @@ multiple.correspondence = function(data, quali_sup = "", quanti_sup = "",
   
 }
 genlinmod = function(data, iter = 1, return = 0) {
-  iter = 1
   iter = 1:iter
   accuracy = rep(0, times = length(iter))
   len = length(data[,1])
@@ -662,7 +661,7 @@ genlinmod = function(data, iter = 1, return = 0) {
   indices_all = 1:len
   continue = 0
   while (continue == 0) {
-    indices_train = sort(sample(x = indices_all, size = round(0.5*len, 0),
+    indices_train = sort(sample(x = indices_all, size = round(0.95*len, 0),
                                 replace = F), decreasing = F)
     indices_test = indices_all[!(indices_all %in% indices_train)]
     # data.frame(indices_train[1:100], indices_test[1:100])
@@ -672,8 +671,9 @@ genlinmod = function(data, iter = 1, return = 0) {
     # Check if each variable in training and testing sets has two factors
     continue = 1
     for (var in 1:(length(data) - 1)) {
-      if (nlevels(train[,var]) < 2) { print("YES"); continue = 0 }
-      if (nlevels(test[,var]) < 2) { print("YES"); continue = 0 }
+      if (var == 33 | var == 41 | var == 42 | var == 43 ) {next}
+      if (nlevels(train[,var]) < 2) { print(paste("Train", var)); continue = 0 }
+      if (nlevels(test[,var]) < 2) { print(paste("Test", var)); continue = 0 }
     }
   }
   
