@@ -66,59 +66,14 @@ for (num in 1:length(pairs[,1])) {
 
 # Run generalized linear model
 data.sub = subset(data, select = -c(Comm, Vill))
-genlinmod(data = data.sub, iter = 1)
-iter = 1
-iter = 1:iter
-accuracy = rep(0, times = length(iter))
-len = length(data.sub[,1])
-# for (i in iter) {
-
-# Create training (50%) and testing (50%) sets using random sampling
-indices_all = 1:len
-continue = 0
-while (continue == 0) {
-  indices_train = sort(sample(x = indices_all, size = round(0.95*len, 0),
-                              replace = F), decreasing = F)
-  indices_test = indices_all[!(indices_all %in% indices_train)]
-  # data.frame(indices_train[1:100], indices_test[1:100])
-  train = data.sub[indices_train,]; test = data.sub[indices_test,]
-  # print(summary(train)); print(summary(test))
-  
-  # Check if each variable in training and testing sets has two factors
-  continue = 1
-  for (var in 1:(length(data.sub) - 1)) {
-    if (var == 33 | var == 41 | var == 42 | var == 43 ) {next}
-    if (nlevels(train[,var]) < 2) { print(paste("Train", var)); continue = 0 }
-    if (nlevels(test[,var]) < 2) { print(paste("Test", var)); continue = 0 }
-  }
-}
-
-# Run glm model
-model = glm(formula = IntndPitFullDes ~ Prov + CGend + IDPoor + LivRP + 
-              VillOD + FreqNeiToi + 
-              Satis + Rec + SatisSup + RecSup + Yr + Mnth +
-              RDefBefor_BshFld + Rain.mm,
-            data = train,
-            family = binomial(link = "logit"),
-            na.action = na.omit)
+accuracy = genlinmod(data = data.sub, 
+                     formula = paste("IntndPitFullDes ~ Prov + CGend + IDPoor",
+                                     "+ LivRP + VillOD + FreqNeiToi + Satis +",
+                                     "Rec + SatisSup + RecSup + Yr + Mnth +",
+                                     "RDefBefor_BshFld + Rain.mm"),
+                     iter = 1000, perc_train = 0.95, return = 1)
 # Removed due to low freqs: RDefBefor_NeiToi, RDefBefor_RivPnd
 # Removed due to low info: AdltUseLat, ChldUseLat, InfLatDump
-
-# Analyze model fit
-# if (iter == 1) {
-# print(summary(model))
-print(anova(model, test = "Chisq"))
-print(pR2(model))
-
-
-
-
-
-
-
-
-
-
 
 # By year
 data.sub = subset(data, Yr != 2014)
