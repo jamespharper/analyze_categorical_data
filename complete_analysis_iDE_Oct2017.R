@@ -23,9 +23,6 @@ data = subset(data, select = -c(IntndChngDich, IntndChng, IntndChng_Shltr,
                                 IntndChng_WtrRes, IntndChng_Othr,
                                 IntndChng_NAAlwysToi, RDefBefor))
 
-###############################################################################
-# ANALYZE DATA
-###############################################################################
 # Characterize data, focusing on NAs
 summary(data)
 names(data)
@@ -37,6 +34,10 @@ data = subset(data, !is.na(IntndPitFull))
 # print(sapply(data, function(x) sum(is.na(x))))
 # missmap(data[1:35], main = "Missing Values in Variables", legend = F)
 # print(summary(data))
+
+###############################################################################
+# ANALYZED DATA
+###############################################################################
 
 # Run 1-way frequency analysis on selected variable
 names(data)
@@ -64,7 +65,60 @@ for (num in 1:length(pairs[,1])) {
 #                         quanti_sup = c())   # NOT WORKING
 
 # Run generalized linear model
-genlinmod(data = data, iter = 1)
+data.sub = subset(data, select = -c(Comm, Vill))
+genlinmod(data = data.sub, iter = 1)
+iter = 1
+iter = 1:iter
+accuracy = rep(0, times = length(iter))
+len = length(data.sub[,1])
+# for (i in iter) {
+
+# Create training (50%) and testing (50%) sets using random sampling
+indices_all = 1:len
+continue = 0
+while (continue == 0) {
+  indices_train = sort(sample(x = indices_all, size = round(0.95*len, 0),
+                              replace = F), decreasing = F)
+  indices_test = indices_all[!(indices_all %in% indices_train)]
+  # data.frame(indices_train[1:100], indices_test[1:100])
+  train = data.sub[indices_train,]; test = data.sub[indices_test,]
+  # print(summary(train)); print(summary(test))
+  
+  # Check if each variable in training and testing sets has two factors
+  continue = 1
+  for (var in 1:(length(data.sub) - 1)) {
+    if (var == 33 | var == 41 | var == 42 | var == 43 ) {next}
+    if (nlevels(train[,var]) < 2) { print(paste("Train", var)); continue = 0 }
+    if (nlevels(test[,var]) < 2) { print(paste("Test", var)); continue = 0 }
+  }
+}
+
+# Run glm model
+model = glm(formula = IntndPitFullDes ~ Prov + CGend + IDPoor + LivRP + 
+              VillOD + FreqNeiToi + 
+              Satis + Rec + SatisSup + RecSup + Yr + Mnth +
+              RDefBefor_BshFld + Rain.mm,
+            data = train,
+            family = binomial(link = "logit"),
+            na.action = na.omit)
+# Removed due to low freqs: RDefBefor_NeiToi, RDefBefor_RivPnd
+# Removed due to low info: AdltUseLat, ChldUseLat, InfLatDump
+
+# Analyze model fit
+# if (iter == 1) {
+# print(summary(model))
+print(anova(model, test = "Chisq"))
+print(pR2(model))
+
+
+
+
+
+
+
+
+
+
 
 # By year
 data.sub = subset(data, Yr != 2014)
@@ -310,6 +364,48 @@ mean(perc_des)
 sd(perc_des)
 windowsFonts()
 correspondence(data = data.sub, metric1 = "IntndPitFull", metric2 = "Prov")
+
+# By rainfall
+summary(as.factor(data$Rain.mm))
+length(data)
+# missmap(data[45], main = "Missing values vs observed", legend = F)
+biserial.cor(data$Rain.mm, data$IntndPitFullDes, use = "complete.obs")
+ggplot(data = data, aes(x = as.numeric(Mnth), y = Rain.mm, colour = Prov)) +
+  geom_line(aes(colour = Prov), size = 1.5) +
+  theme_minimal() +
+  labs(x = "Month", y = "Rainfall (mm)", colour = "Provinces") +
+  scale_x_continuous(breaks = c(1:12)) +
+  coord_cartesian(xlim = c(1, 12), ylim = c(0, max(data$Rain.mm) + 30))
+data.sub = subset(data, select = c(Rain.mm, IntndPitFullDes))
+model = glm(formula = IntndPitFullDes ~ Rain.mm,
+            data = data.sub,
+            family = binomial(link = "logit"),
+            na.action = na.omit)
+plot(data.sub$IntndPitFullDes, data.sub$Rain.mm)
+biserial.cor(data.sub$Rain.mm, data.sub$IntndPitFullDes, use = "complete.obs")
+anova(model, test = "Chisq")
+summary(data.sub)
+plot(data$IntndPitFullDes, data$Rain.mm)
+df = data.frame(Prov = factor(), PtBisCor = double(), P = double())
+levels(df$Prov) = unique(data$Prov)
+# for (i in 1:1) {
+for (i in 1:length(unique(data$Prov))) {
+  data.sub = subset(data, Prov == unique(data$Prov)[i],
+                    select = c(Rain.mm, IntndPitFullDes))
+  model = glm(formula = IntndPitFullDes ~ Rain.mm,
+              data = data.sub,
+              family = binomial(link = "logit"),
+              na.action = na.omit)
+  plot(data.sub$IntndPitFullDes, data.sub$Rain.mm, main = unique(data$Prov)[i])
+  prov = unique(data$Prov)[i]
+  ptbiscor = biserial.cor(data.sub$Rain.mm, data.sub$IntndPitFullDes, 
+                          use = "complete.obs")
+  p = anova(model, test = "Chisq")$`Pr(>Chi)`[2]
+  df = rbind(df, data.frame(Prov = prov, PtBisCor = ptbiscor, P = p))
+}
+df
+summary(data$Prov)
+mean(df$P[!is.na(df$P)])
 
 ###############################################################################
 # ANALYZE DATA AGGREGATED BY PROVINCE
