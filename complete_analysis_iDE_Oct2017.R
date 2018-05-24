@@ -15,7 +15,8 @@ load_libraries(c("rio", "gmodels", "vcd", "gtools",  # Install & load libraries
                  "ca", "extracat", "iplots", 
                  "FactoMineR", "gplots", "factoextra",
                  "corrplot", "ggpubr", "rgl", "missMDA",
-                 "pscl", "ltm", "Amelia", "ROCR", "extrafont"))
+                 "pscl", "ltm", "Amelia", "ROCR", "extrafont",
+                 "DescTools"))
 loadfonts(device = "win")
 load(file = "iDE_Oct2017.Rdata")
 data = subset(data, select = -c(IntndChngDich, IntndChng, IntndChng_Shltr,
@@ -64,16 +65,85 @@ for (num in 1:length(pairs[,1])) {
 #                         quali_sup = c(3:4, 7, 10, 12, 13, 18),
 #                         quanti_sup = c())   # NOT WORKING
 
-# Run generalized linear model
+# Develop generalized linear model
 data.sub = subset(data, select = -c(Comm, Vill))
-accuracy = genlinmod(data = data.sub, 
-                     formula = paste("IntndPitFullDes ~ Prov + CGend + IDPoor",
-                                     "+ LivRP + VillOD + FreqNeiToi + Satis +",
-                                     "Rec + SatisSup + RecSup + Yr + Mnth +",
-                                     "RDefBefor_BshFld + Rain.mm"),
-                     iter = 1000, perc_train = 0.95, return = 1)
-# Removed due to low freqs: RDefBefor_NeiToi, RDefBefor_RivPnd
-# Removed due to low info: AdltUseLat, ChldUseLat, InfLatDump
+data.sub = subset(data.sub, Prov != "Takeo" & Prov != "Kampong Cham" &
+                    Prov != "Kampong Speu" & Yr != "2014")
+data.sub = droplevels(data.sub)
+summary(data.sub, maxsum = 100)
+# Removed due to not enough data in each geographic area: Dist, Comm, Vill
+results = genlinmod(data = data.sub, 
+                    formula = paste("IntndPitFullDes ~ Prov + Yr + Mnth + IDPoor +",
+                                    "RDefBefor_BshFld + ",
+                                    "InfLatDump + ChlngsFlood + ",
+                                    "Satis + SatisSup + RecSup"),
+                    iter = 1000, perc_train = 0.95, return = 1)
+# ALL FACTORS that showed statistically significant and important associations with the desirability of FSM intentions
+# Removed Dist because it created too many errors
+# IntndPitFullDes ~ Prov + Yr + Mnth + IDPoor + RDefBefor_BshFld + FreqNeiToi + InfLatDump + ChlngsFlood + ChlngsNoWtr + Satis + SatisSup + Rec + RecSup + Rain.mm
+# LESS FACTORS WITH LOW P IN ABOVE MODEL: Rec, ChlngsNoWtr, Rain.mm, FreqNeiToi
+print(results)
+print(summary(results[[2]]))
+print(anova(results[[2]], test = "Chisq"))
+# FINAL MODEL
+results = genlinmod(data = data.sub, 
+                    formula = paste("IntndPitFullDes ~ Prov + Yr + Mnth + IDPoor +",
+                                    "RDefBefor_BshFld + ",
+                                    "ChlngsFlood + ",
+                                    "Satis + SatisSup + RecSup"),
+                    iter = 1, perc_train = 1, return = 1)
+print(results)
+print(summary(results[[2]]))
+print(anova(results[[2]], test = "Chisq"))
+print(confint(results[[2]]))
+# FINAL MODEL WITH FACTORS REORDERED BY DECREASING DEVIANCE
+results = genlinmod(data = data.sub, 
+                    formula = paste("IntndPitFullDes ~ Prov + Satis + Mnth + ",
+                                    "RecSup + Yr + SatisSup + ",
+                                    "RDefBefor_BshFld + ChlngsFlood + IDPoor"),
+                    iter = 1, perc_train = 1, return = 1)
+print(results)
+print(summary(results[[2]]))
+print(anova(results[[2]], test = "Chisq"))
+# pR2(results[[2]])
+PseudoR2(results[[2]])
+print(confint(results[[2]]))
+
+model = glm(formula = paste("IntndPitFullDes ~ Prov + Satis + Mnth + ",
+                            "RecSup + Yr + SatisSup + ",
+                            "RDefBefor_BshFld + ChlngsFlood + IDPoor"),
+            data = data.sub,
+            family = binomial(link = "logit"),
+            na.action = na.omit)
+print(model)
+print(summary(model))
+print(anova(model, test = "Chisq"))
+pR2(model)
+PseudoR2(model, which = "all")
+print(confint(model))
+
+### OLD
+# ALL VARIABLES POSSIBLE
+# "IntndPitFullDes ~ Prov + IDPoor",
+# "+ LivRP + VillOD + FreqNeiToi + AdltUseLat + ChldUseLat + Satis +",
+# "Rec + SatisSup + RecSup + Mnth + Chlngs +",
+# "RDefBefor_BshFld + RDefBefor_RivPnd + Rain.mm +",
+# "InfLatDump"
+# Factors with low p: RDefBefor_RivPnd, LivRP, ChldUseLat
+# LESS LOW-P FACTORS
+# "IntndPitFullDes ~ Prov + IDPoor",
+# "+ VillOD + FreqNeiToi + AdltUseLat + Satis +",
+# "Rec + SatisSup + RecSup + Mnth + Chlngs +",
+# "RDefBefor_BshFld + Rain.mm +",
+# "InfLatDump"
+# Replaced Chlngs with significant dich Chlngs
+# "IntndPitFullDes ~ Prov + IDPoor",
+# "+ VillOD + FreqNeiToi + AdltUseLat + Satis +",
+# "Rec + SatisSup + RecSup + Mnth +",
+# "RDefBefor_BshFld + Rain.mm + ChlngsFlood + ChlngsNoWtr +",
+# "InfLatDump"
+### OLD 2
+# Removed due to low info: AdltUseLat, InfLatDump
 
 # By year
 data.sub = subset(data, Yr != 2014)
@@ -173,7 +243,7 @@ ggplot(df, aes(x = Mnth)) +
                       labels = c("Pay professional",
                                  "Install a new pit",
                                  "Self-empty",
-                                 "Don't know",
+                                 "Undecided",
                                  "Stop using latrine",
                                  "Other")) +
   ggtitle(title) + 
@@ -297,7 +367,7 @@ ggplot(df, aes(x = Prov)) +
                       labels = c("Pay professional",
                                  "Install a new pit",
                                  "Self-empty",
-                                 "Don't know",
+                                 "Undecided",
                                  "Stop using latrine",
                                  "Other")) +
   ggtitle(title) + 
@@ -322,7 +392,7 @@ correspondence(data = data.sub, metric1 = "IntndPitFull", metric2 = "Prov")
 
 # By rainfall
 summary(as.factor(data$Rain.mm))
-length(data)
+length(data$Rain.mm)
 # missmap(data[45], main = "Missing values vs observed", legend = F)
 biserial.cor(data$Rain.mm, data$IntndPitFullDes, use = "complete.obs")
 ggplot(data = data, aes(x = as.numeric(Mnth), y = Rain.mm, colour = Prov)) +
@@ -361,6 +431,19 @@ for (i in 1:length(unique(data$Prov))) {
 df
 summary(data$Prov)
 mean(df$P[!is.na(df$P)])
+
+# With latrine coverage
+provs = c("OddM", "BanM", "SieR", "KamT", "KanL", "PreV", "SvaG")
+perc_des_by_prov = c(67, 76, 33, 54, 71, 48, 56)
+perc_latcov_by_prov_2016 = c(35, 57, 48, 46, 69, 53, 65)
+data.sub = data.frame(Des = perc_des_by_prov, LatCov = perc_latcov_by_prov_2016)
+p.mat = cor.mtest(data.sub)
+print(p.mat)
+cor(data.sub)
+corrplot(cor(data.sub), method = "pie", type = "lower", order = "original",
+         diag = FALSE, p.mat = p.mat, sig.level = 0.05, 
+         addCoef.col = "black", tl.col = "black", tl.srt = 45,
+         family = "serif", number.font = 1)
 
 ###############################################################################
 # ANALYZE DATA AGGREGATED BY PROVINCE
