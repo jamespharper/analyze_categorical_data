@@ -687,31 +687,36 @@ genlinmod = function(data, formula, iter = 1, perc_train = 0.8, return = 0) {
     if (length(iter) == 1) {
       print(summary(model))
       print(anova(model, test = "Chisq"))
-      print(pR2(model))
+      # print(pR2(model))
+      PseudoR2(model)
     }
     
     # Test predictive power of model on test data
-    fitted.results = try(predict(object = model, newdata = test,
-                                 type = "response"), silent = T)
-    if (inherits(fitted.results, "try-error")) {
-      next
+    if (perc_train != 1) {
+      fitted.results = try(predict(object = model, newdata = test,
+                                   type = "response"), silent = T)
+      if (inherits(fitted.results, "try-error")) {
+        next
+      }
+      fitted.results = ifelse(fitted.results > 0.5, 1, 0)
+      # data.frame(test$IntndPitFullDes[!is.na(fitted.results)],
+      #            fitted.results[!is.na(fitted.results)])
+      misclass.error = mean(fitted.results[!is.na(fitted.results)] !=
+                              test$IntndPitFullDes[!is.na(fitted.results)])
+      accuracy[i] = 1 - misclass.error
+      
+      # Calculate AUC and plot ROC
+      if (length(iter) == 1) {
+        pr = prediction(fitted.results, test$IntndPitFullDes)
+        prf = performance(pr, measure = "tpr", x.measure = "fpr")
+        plot(prf)
+        auc = performance(pr, measure = "auc")
+        auc = auc@y.values[[1]]
+        print(auc)
+      }
     }
-    fitted.results = ifelse(fitted.results > 0.5, 1, 0)
-    # data.frame(test$IntndPitFullDes[!is.na(fitted.results)],
-    #            fitted.results[!is.na(fitted.results)])
-    misclass.error = mean(fitted.results[!is.na(fitted.results)] !=
-                            test$IntndPitFullDes[!is.na(fitted.results)])
-    accuracy[i] = 1 - misclass.error
     
-    # Calculate AUC and plot ROC
-    if (length(iter) == 1) {
-      pr = prediction(fitted.results, test$IntndPitFullDes)
-      prf = performance(pr, measure = "tpr", x.measure = "fpr")
-      plot(prf)
-      auc = performance(pr, measure = "auc")
-      auc = auc@y.values[[1]]
-      print(auc)
-    }
+    
   
   }
   print(accuracy)
@@ -719,7 +724,7 @@ genlinmod = function(data, formula, iter = 1, perc_train = 0.8, return = 0) {
   print(mean(accuracy[accuracy != 0]))
   
   # Return correspondence results if user selected
-  if (return == 1) {return(list(accuracy))}
+  if (return == 1) {return(list(accuracy, model))}
   
 }
 save_text_output_to_file = function(subfolder, name) {
